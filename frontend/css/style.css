@@ -1,0 +1,1413 @@
+/* ===== Variables de marca (Cooperativa CRAM) ===== */
+:root {
+    --primary-600: #2e7d32;
+    --primary-500: #388e3c;
+    --primary-300: #66bb6a;
+    --primary-200: #aed581;
+    --primary-100: #e8f5e9;
+    --accent-100: #c8e6c9;
+    --text-900: #1f2937;
+    --text-700: #374151;
+    --text-600: #4b5563;
+    --bg-50: #f5f5f5;
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --shadow-sm: 0 2px 6px rgba(46, 125, 50, 0.10);
+    --shadow-md: 0 2px 12px rgba(46, 125, 50, 0.18);
+    --shadow-lg: 0 6px 24px rgba(46, 125, 50, 0.22);
+    --transition-fast: 0.2s ease;
+    --transition-snap: 0.06s ease;
+    /* Ancho mínimo de tabla de catálogo en móvil para vista tipo desktop */
+    --catalog-min-width: 720px;
+}
+
+/* ===== Reset básico ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Medios fluidos por defecto */
+img, video, svg { max-width: 100%; height: auto; }
+iframe { max-width: 100%; }
+
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+    padding: 32px 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* En la página de cuenta, la separación se define más abajo con altura del header */
+
+main h2 {
+    color: #2e7d32;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #388e3c;
+    padding-bottom: 8px;
+    font-size: 1.5em;
+    font-weight: 700;
+}
+
+/* ===== Header (solo el header del sitio) ===== */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 9999; /* por encima de cualquier tarjeta */
+    isolation: isolate; /* crear contexto propio de apilamiento */
+    background: linear-gradient(90deg, #2e7d32 70%, #388e3c 100%);
+    color: white;
+    padding: 16px 32px;
+    width: 100%; /* garantizar que siempre cubra todo el ancho */
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.12);
+    /* reset fino para evitar herencias inesperadas */
+    font-family: 'Roboto', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.2;
+}
+
+/* Fix global: asegurar modales por encima del header sticky */
+.modal-backdrop { z-index: 10000 !important; }
+.modal { z-index: 10001 !important; }
+
+/* Separación dinámica para el catálogo bajo header sticky */
+.main-catalogo {
+    padding-top: var(--header-offset, 96px);
+}
+
+/* Evitar que el header tape anclas/elementos al hacer scroll */
+#catalogo, .busqueda, .accordion {
+    scroll-margin-top: calc(var(--header-offset, 96px) + 12px);
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 16px;
+}
+
+.site-header .logo {
+    height: 80px; /* Más grande */
+    margin-right: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(46, 125, 50, 0.18);
+    padding: 4px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: block; /* evitar huecos por baseline inline */
+}
+
+.header-container a:hover .logo {
+    transform: scale(1.08) rotate(-3deg);
+    box-shadow: 0 6px 24px rgba(46, 125, 50, 0.25);
+}
+
+.site-header h1 {
+    font-size: 2em;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+    flex: 1;
+    text-align: left;
+    margin: 0;           /* neutraliza márgenes por Bootstrap/navegador */
+    line-height: 1.1;    /* altura uniforme del título */
+}
+
+/* Links dentro del header: heredan color y sin subrayado */
+.site-header a { color: inherit; text-decoration: none; font: inherit; }
+.site-header a:visited { color: inherit; text-decoration: none; }
+.site-header a:hover { text-decoration: none; }
+.site-header button { font: inherit; line-height: 1; }
+.site-header button, .site-header .btn-login { -webkit-appearance: none; appearance: none; }
+/* Quitar resalte azul de tap en móviles dentro del header */
+.site-header a, .site-header button { -webkit-tap-highlight-color: transparent; }
+
+/* ===== Botón de inicio de sesión ===== */
+.site-header .btn-login {
+    margin-left: auto;
+    background-color: #fff;
+    color: #2e7d32;
+    padding: 10px 22px;
+    font-size: 1em;
+    text-decoration: none;
+    border-radius: 8px;
+    border: 2px solid #2e7d32;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.10);
+    transition: all 0.3s ease;
+    display: inline-flex;           /* igual en <a> y <button> */
+    align-items: center;
+    line-height: 1;                 /* evita alturas distintas */
+    min-height: 40px;               /* alto uniforme del botón */
+    margin-top: 0; margin-bottom: 0; /* blindaje ante resets ajenos */
+}
+/* Evitar que el anchor del botón se vuelva violeta/subrayado */
+.site-header .btn-login:link,
+.site-header .btn-login:visited,
+.site-header .btn-login:hover,
+.site-header .btn-login:active {
+    color: #2e7d32 !important;
+    text-decoration: none !important;
+}
+
+.site-header .btn-login:hover {
+    background-color: #66bb6a;
+    color: #fff;
+    border-color: #388e3c;
+}
+
+/* ===== Información y imágenes ===== */
+.texto-imagenes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    align-items: flex-start;
+    margin-bottom: 32px;
+}
+
+.texto {
+    flex: 2;
+    min-width: 260px;
+}
+
+.imagenes {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 180px;
+}
+
+.imagenes img {
+    width: 100%;
+    max-width: 260px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(46, 125, 50, 0.13);
+    border: 2px solid #c8e6c9;
+    background: #fff;
+}
+
+/* Estilos para los almacenes (más pequeños) */
+.imagenes-almacenes {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 180px;
+}
+
+.imagenes-almacenes img {
+    width: 100%;
+    max-width: 193px; /* Reducido de 260px a 195px */
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.13);
+    border: 2px solid #c8e6c9;
+    background: #fff;
+}
+
+/* Estilo para la imagen de entrada (centrada debajo) */
+.imagen-entrada {
+    text-align: center;
+}
+
+.imagen-entrada img {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(46, 125, 50, 0.15);
+    border: 2px solid #c8e6c9;
+    background: #fff;
+}
+
+/* ===== Contacto ===== */
+.contacto p, .contacto a {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+}
+
+.mapa {
+    margin-top: 18px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(46, 125, 50, 0.10);
+    border: 2px solid #c8e6c9;
+}
+
+/* ===== Frase final ===== */
+.frase-final {
+    margin: 40px 0 0 0;
+    text-align: center;
+    font-size: 1.2em;
+    color: #388e3c;
+    font-style: italic;
+    background: #e8f5e9;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.07);
+}
+
+/* ===== Footer ===== */
+footer {
+    background: linear-gradient(90deg, #2e7d32 70%, #388e3c 100%);
+    color: white;
+    text-align: center;
+    z-index: 2000; /* asegurar que quede por encima del contenido */
+    padding: 16px;
+    margin-top: 40px;
+    font-size: 1em;
+    letter-spacing: 0.5px;
+    box-shadow: 0 -2px 8px rgba(46, 125, 50, 0.10);
+
+/* ===== Cuenta > Mis pedidos ===== */
+}
+
+/* ===== Centrado vertical solo para login ===== */
+.main-cuenta .pedidos h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.main-cuenta .pedidos { margin-top: 8px; }
+
+.lista-pedidos .pedido {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+
+.pedido-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    color: var(--text-900);
+}
+
+.pedido-title {
+    font-weight: 800;
+    color: var(--text-900);
+}
+
+.pedido-date { font-size: 12px; color: #6b7280; }
+
+.pedido-stats { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+
+.pedido .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--primary-600);
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    border: 1px solid rgba(0,0,0,.06);
+}
+
+.btn-toggle-items {
+    background: #fff;
+    color: var(--primary-600);
+    border: 1px solid var(--primary-300);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-weight: 700;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-snap);
+}
+.btn-toggle-items:hover { background: var(--primary-100); }
+.btn-toggle-items:active { transform: translateY(1px); }
+
+.pedido-items { padding: 8px 12px; overflow-x: auto; }
+.pedido-items .items-loading { font-size: 12px; color: #6b7280; }
+.pedido-items .tabla-items { width: 100%; border-collapse: collapse; min-width: 520px; }
+.pedido-items .tabla-items th { text-align: left; border-bottom: 1px solid #e5e7eb; padding: 6px 8px; color: var(--text-700); }
+.pedido-items .tabla-items td { padding: 6px 8px; border-bottom: 1px solid #f3f4f6; color: var(--text-900); }
+
+/* Responsive: pila elementos del header del pedido en pantallas chicas */
+@media (max-width: 820px) {
+    /* El menú del header no empuja ni aumenta altura del header en móvil */
+    /* Apilar y centrar elementos del header en móvil */
+    .site-header .btn-login { margin-left: 0; }
+    .site-header .cram-dropdown { margin-left: 0; margin-top: 6px; }
+    /* Centrar el botón/menú de sesión bajo el título en móvil/tablet */
+    .site-header .header-container { flex-wrap: wrap; }
+    .site-header .btn-login,
+    .site-header .cram-dropdown {
+        order: 3;                /* lo envía a la siguiente línea */
+        margin: 8px auto 0 auto; /* centrado horizontal */
+        align-self: center;      /* alineación vertical coherente */
+    }
+    /* Menú de sesión en móvil: anclado al botón hacia la derecha, sin centrar bajo el título */
+    .site-header .cram-dropdown { align-self: auto; }
+    /* Evitar que celdas se estiren con espacios o wraps raros */
+    .tabla-rubro th, .tabla-rubro td { max-width: none !important; }
+    /* Asegurar que el contenedor permita scroll y no wrapee */
+    .accordion-content .rubro-items { display:block; white-space: normal; }
+    .site-header .cram-dropdown.open .cram-menu,
+    .site-header .cram-dropdown:hover .cram-menu,
+    .site-header .cram-dropdown:focus-within .cram-menu {
+        position: absolute; right: 0; left: auto; top: calc(100% + 8px); transform: none;
+        display: flex;
+        width: auto; max-width: calc(100vw - 24px); min-width: 220px;
+        margin-top: 0;
+        box-shadow: 0 2px 8px rgba(46, 125, 50, 0.12); border: 1px solid #c8e6c9; background: #fff; padding: 8px;
+    }
+    /* Tamaño cómodo de items en móvil */
+    .site-header .cram-menu a, .site-header .cram-menu .cram-link { padding: 12px 16px; }
+    /* Fallback: menú preparado dentro del ancho de la pantalla, anclado a la derecha */
+    .site-header .cram-menu { right: 0; left: auto; transform: none; max-width: calc(100vw - 24px); }
+    .site-header .cram-dropdown::after { right: 0; left: auto; transform: none; }
+    .pedido-stats { gap: 10px; }
+    .pedido-title { font-size: 14px; }
+    .pedido-date { font-size: 11px; }
+}
+.main-login {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ===== Formulario de usuario (cuenta) ===== */
+.formulario.usuario {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    padding: 48px 4vw 32px 4vw;
+    border-radius: 0;
+    box-shadow: none;
+    background: #fff;
+}
+
+.formulario.usuario h2 {
+    text-align: center;
+    color: #2e7d32;
+    margin-bottom: 32px;
+    font-size: 2em;
+}
+
+.datos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 40px;
+    width: 100%;
+    margin-bottom: 32px;
+    padding: 0;
+}
+
+.datos-grid label {
+    font-weight: bold;
+}
+
+.datos-grid input[type="password"] {
+    background: #f1f8e9;
+    border: none;
+    color: #388e3c;
+    font-weight: 600;
+    width: 100%;
+}
+
+.datos-grid span {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+@media (max-width: 900px) {
+    main {
+        padding: 0;
+        max-width: none;
+    }
+    .main-cuenta { padding-top: 96px; }
+    .formulario.usuario {
+        padding: 24px 2vw;
+    }
+    .datos-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .main-cuenta { padding-top: 88px; }
+    .main-login {
+        padding: 8px;
+    }
+    /* Sin altura fija ni scroll interno en móviles */
+    .main-login .formulario {
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+        transition: none !important;
+    }
+    .formulario {
+        margin: 0 auto;
+        max-width: 98vw;
+        padding: 16px;
+    }
+    .site-header h1 { font-size: 1.2em; }
+    main h2 {
+        font-size: 1.1em;
+    }
+    .site-header .header-container { flex-wrap: wrap; }
+    .site-header .logo { height: 64px; margin-right: 12px; }
+    .site-header .btn-login { padding: 8px 12px; font-size: 0.95em; min-height: 38px; }
+    main { padding: 16px 10px; }
+    .frase-final {
+        font-size: 1em;
+        padding: 10px;
+    }
+    footer {
+        font-size: 0.9em;
+        padding: 10px;
+    }
+}
+
+/* Perfil extra chico: teléfonos muy angostos (ej. 320-360px) */
+@media (max-width: 360px) {
+    .site-header .logo { height: 56px; }
+    .site-header h1 { font-size: 1.05em; }
+    .site-header .btn-login { padding: 8px 10px; min-height: 36px; }
+}
+
+/* ===== Mejoras generales para formularios, botones y tarjetas ===== */
+.formulario,
+.accordion,
+.repuesto,
+.carrito {
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.08);
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #c8e6c9;
+    margin-bottom: 24px;
+}
+
+/* ===== Ajustes de texto para noticias/avisos ===== */
+.card .card-body p,
+.news-text,
+.carousel-card p {
+    white-space: pre-line;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+}
+
+.formulario {
+    margin: 30px auto;
+    max-width: 700px;
+    padding: 25px;
+    min-height: 360px; /* reserva espacio para mensajes de error */
+    transition: min-height .2s ease;
+}
+
+.formulario label {
+    display: block;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* Mensajes de error consistentes */
+.formulario .error-msg {
+    color: #b91c1c;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-top: 6px;
+    font-weight: 600;
+    word-break: break-word;      /* cortar palabras largas */
+    overflow-wrap: anywhere;     /* permitir saltos en cualquier parte */
+    white-space: normal;         /* evitar que se mantenga en una línea */
+}
+
+.formulario input,
+.formulario textarea,
+.formulario select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1.5px solid #aed581;
+    border-radius: 6px;
+    font-size: 1em;
+    background: #f9fff9;
+    transition: border-color 0.3s;
+    min-height: 42px; /* altura consistente */
+}
+
+.formulario input:focus,
+.formulario textarea:focus,
+.formulario select:focus {
+    border-color: #388e3c;
+    outline: none;
+}
+
+.formulario button {
+    background-color: #66bb6a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-top: 15px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.10);
+}
+
+.formulario button:hover {
+    background-color: #43a047;
+}
+
+/* ===== Utilidad: botones un poco más anchos y sin salto ===== */
+.btn-wide {
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+/* ===== Acciones del login ===== */
+.login-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center; /* centrar por defecto */
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+/* Altura fija del recuadro de login en desktop/tablet */
+@media (min-width: 601px) {
+    .main-login .formulario {
+    /* Compacto: menos padding general para reducir espacio vacío */
+    padding: 18px 22px;
+    min-width: 500px; /* más compacto en desktop */
+    width: 500px;
+    max-width: 500px; /* ancho fijo para que el error entre en una línea */
+    height: auto;      /* sin altura fija */
+    min-height: 0;     /* sin mínimo forzado */
+        overflow: visible;   /* sin scroll interno */
+        transition: none;   /* evitar animación al variar el contenido */
+    }
+    /* En desktop, mantener el error en una sola línea para medir el ancho adecuado */
+    .main-login .formulario .error-msg {
+        white-space: nowrap;
+    }
+}
+
+/* Contenedores de error: sin reserva extra para evitar espacio vacío cuando no hay error */
+.formulario .error-slot { min-height: 0; }
+
+/* Afinado de espaciados solo en el login */
+.main-login .formulario h2 { margin-bottom: 14px; }
+.main-login .formulario label { margin-top: 8px; }
+.main-login .login-actions { margin-top: 12px; }
+
+.formulario .btn-ingresar {
+    background-color: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: 1.05em;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.18);
+    transition: transform 0.06s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.formulario .btn-ingresar:hover {
+    background-color: #1b5e20;
+}
+
+.formulario .btn-ingresar:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 5px rgba(46, 125, 50, 0.28);
+}
+
+.btn-recuperar {
+    display: inline-block;
+    background-color: #ffffff;
+    color: #2e7d32;
+    padding: 10px 14px;
+    font-size: 0.98em;
+    text-decoration: none;
+    border-radius: 8px;
+    border: 2px solid #2e7d32;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.10);
+    transition: all 0.2s ease;
+}
+
+.btn-recuperar:hover {
+    background-color: #66bb6a;
+    color: #fff;
+    border-color: #388e3c;
+}
+
+@media (max-width: 480px) {
+    .login-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .btn-recuperar {
+        text-align: center;
+    }
+}
+
+/* Enlace de recuperar tipo texto bajo el password */
+.link-recuperar {
+    display: inline-block;
+    margin-top: 8px;
+    color: #2e7d32;
+    text-decoration: none;
+    font-weight: 600;
+}
+.link-recuperar::before {
+    content: '¿';
+}
+.link-recuperar::after {
+    content: '?';
+}
+.link-recuperar:hover {
+    text-decoration: underline;
+    color: #1b5e20;
+}
+
+/* Solo un botón alineado a la derecha */
+.login-actions.solo-boton {
+    justify-content: flex-end;
+}
+
+/* ===== Accordion ===== */
+.accordion {
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    /* Contenido completamente oculto cuando está cerrado */
+    overflow: hidden;
+    border: 2px solid #c8e6c9;
+    background-color: #f1f8e9;
+    /* Sin altura mínima; cerrado = solo header visible */
+    min-height: 0;
+}
+/* evitar ranura inicial antes del primer rubro */
+body.page-catalogo #catalogo .accordion:first-child { margin-top: 6px; }
+
+.accordion-header {
+    background-color: #81c784;
+    color: #2e7d32;
+    padding: 1rem;
+    font-weight: bold;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.accordion-header:hover {
+    background-color: #66bb6a;
+}
+
+.accordion-content {
+    display: none;
+    padding: 0; /* sin espacio visible cuando está cerrado */
+    width: 100%;
+}
+
+.accordion.active .accordion-content {
+    display: block;
+    padding: 12px 0; /* margen horizontal 0 para no recortar scrollbar */
+}
+
+/* Tabla por rubro responsive */
+.tabla-rubro {
+    width: 100%;
+    border-collapse: collapse;
+}
+.tabla-rubro th, .tabla-rubro td {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 8px 6px;
+    font-size: 0.95rem;
+    word-break: break-word; /* partir palabras largas */
+    white-space: nowrap;    /* mantener fila compacta */
+}
+
+/* Labels de celdas: ocultos en desktop, visibles en móvil */
+.tabla-rubro .cell-label { display: none; }
+.tabla-rubro .cell-value { display: inline; }
+.tabla-rubro th {
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+
+/* Columna Cantidad más angosta y centrada */
+.tabla-rubro th:last-child,
+.tabla-rubro td:last-child {
+    width: 80px;
+    text-align: center;
+}
+
+/* Input de cantidad compacto, sin spinners y 3 dígitos máx visuales */
+.cantidad-input {
+    width: 60px; /* ~3-4 caracteres */
+    padding: 4px 6px;
+    font-size: 0.95rem;
+    text-align: center;
+}
+.cantidad-input::-webkit-outer-spin-button,
+.cantidad-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.cantidad-input[type=number] {
+    appearance: textfield;
+    -moz-appearance: textfield; /* Firefox */
+}
+
+/* Scroll horizontal en pantallas muy pequeñas */
+.rubro-items {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+    width: 100%;
+    max-width: 100vw; /* no exceder la ventana en móvil */
+    overflow-y: hidden; /* evitar barras dobles */
+    /* Evita que el padding del acordeón recorte el scroll bar */
+    display: block;
+    contain: paint; /* aísla efectos visuales del contenido ancho */
+    overscroll-behavior-x: contain; /* sin rebotes hacia la página */
+}
+
+/* Afinado móvil/tablet: mantener header sticky en catálogo y dar espacio al contenido */
+@media (max-width: 1024px) {
+    /* El header sigue sticky con z alto */
+    body.page-catalogo .site-header,
+    body.catalog-acc-open .site-header {
+        position: sticky !important;
+        top: 0;
+        z-index: 9999 !important;
+    }
+    /* Asegurar overflow visible en acordeón para sombras */
+    .accordion.active { overflow: visible; }
+    /* El main del catálogo respeta la altura real del header */
+    body.page-catalogo .main-catalogo,
+    body.catalog-acc-open .main-catalogo { padding-top: var(--header-offset, 96px) !important; }
+}
+
+@media (max-width: 700px) {
+    /* Nunca ensanchar el documento en móvil */
+    html, body { max-width: 100%; overflow-x: hidden; }
+    /* Padres del catálogo no deben propagar ancho */
+    .main-catalogo, #catalogo { max-width: 100%; overflow-x: hidden; }
+    .accordion, .accordion-content { max-width: 100%; overflow-x: hidden; }
+    /* El acordeón abierto no crea overflow-x global */
+    .accordion.active { overflow-x: hidden !important; overflow-y: visible; }
+    .tabla-rubro {
+        border-collapse: collapse !important;
+        width: auto !important;                  /* se ajusta al contenido real */
+        min-width: max-content !important;       /* garantiza todas las columnas en una fila */
+        border-spacing: 0 !important;
+    }
+  .tabla-rubro thead {
+    display: table-header-group !important;
+    position: static !important;
+    left: auto !important;
+  }
+  .tabla-rubro tr {
+    display: table-row !important;
+    background: transparent !important;
+    margin: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .tabla-rubro th,
+  .tabla-rubro td {
+    display: table-cell !important;
+    padding: 8px 6px !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    position: static !important;
+    white-space: nowrap !important;
+  }
+  /* Alineaciones como desktop */
+  .tabla-rubro td:nth-child(4) { text-align: right !important; }   /* Precio */
+  .tabla-rubro td:last-child   { text-align: center !important; }  /* Cantidad */
+
+  /* Neutralizar modo “tarjetas” */
+  .tabla-rubro td:before   { content: none !important; }
+  .tabla-rubro .cell-label { display: none !important; }
+  .tabla-rubro .cell-value { display: inline !important; }
+}
+
+/* Catálogo abierto en móvil: scroll horizontal LOCAL dentro del contenido del rubro */
+@media (max-width: 700px) {
+    /* Evitar scroll horizontal global */
+    html.catalog-acc-open,
+    body.catalog-acc-open {
+        min-width: 0;
+        overflow-x: hidden;
+        overscroll-behavior-x: contain;
+    }
+    /* El scroll horizontal vive en el contenedor del rubro */
+    body.catalog-acc-open .rubro-items {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+    }
+}
+
+/* ===== Buscador / Filtros del catálogo ===== */
+.busqueda {
+    background: #ffffff;
+    border: 1px solid #c8e6c9;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(46,125,50,0.08);
+    padding: 16px;
+    margin-top: 4px; /* acercar al header */
+    margin-bottom: 16px;
+}
+
+#filtros-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.filtro input.buscador {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--primary-200);
+    border-radius: 8px;
+    background: #f9fff9;
+    font-size: 1rem;
+}
+.filtro input.buscador:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(56,142,60,0.14);
+}
+
+.filtros-extra {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.filtros-extra label {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    background: #f1f8e9;
+    border: 1px solid #c8e6c9;
+    padding: 8px 10px;
+    border-radius: 8px;
+}
+.filtros-extra select {
+    min-width: 180px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--primary-200);
+    border-radius: 8px;
+    background: #fff;
+}
+
+#agregarFiltro {
+    background-color: #66bb6a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(46,125,50,0.10);
+}
+#agregarFiltro:hover { background-color: #43a047; }
+
+/* ===== Repuestos ===== */
+.repuesto {
+    background: #ffffff;
+    border: 1px solid #c8e6c9;
+    border-radius: 8px;
+    margin: 10px 0;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(46,125,50,0.07);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.repuesto-info {
+    flex: 1;
+    font-size: 1em;
+}
+
+.repuesto input[type="number"] {
+    width: 80px;
+    font-size: 1.1em;
+    padding: 5px;
+    border: 2px solid #388e3c;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.repuesto input[type="number"]:disabled {
+    background: #f1f1f1;
+    border-color: #ccc;
+}
+
+/* ===== Botón cargar más ===== */
+.cargar-mas {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #aed581;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.10);
+}
+
+.cargar-mas:hover {
+    background-color: #9ccc65;
+}
+
+/* ===== Carrito ===== */
+.carrito {
+    margin-top: 30px;
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.carrito ul {
+    list-style: none;
+    padding: 0;
+}
+
+.carrito li {
+    margin: 5px 0;
+}
+
+#totalPedido {
+    font-size: 1.4em;
+    color: #2e7d32;
+}
+
+/* ===== Dropdown Header (aislado de Bootstrap) ===== */
+.site-header .cram-dropdown {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.site-header .cram-toggle {
+    background-color: #fff;
+    color: #2e7d32;
+    padding: 10px 22px;
+    font-size: 1em;
+    border-radius: 8px;
+    border: 2px solid #2e7d32;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(46, 125, 50, 0.10);
+    transition: all 0.3s ease;
+    user-select: none;
+    position: relative;
+}
+
+/* Caret visual único */
+.site-header .cram-caret{
+    display: inline-block;
+    margin-left: 8px;
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--primary-600);
+    transition: transform var(--transition-fast), border-top-color var(--transition-fast);
+    vertical-align: middle; /* evita salto por baseline */
+    transform-origin: 50% 50%; /* rotación centrada */
+}
+.site-header .cram-dropdown.open .cram-caret{ transform: rotate(180deg); }
+.site-header .cram-toggle:hover .cram-caret{ border-top-color: #fff; }
+
+.site-header .cram-toggle:hover {
+    background-color: #66bb6a;
+    color: #fff;
+    border-color: #388e3c;
+}
+
+.site-header .cram-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    background: #fff;
+    border: 1px solid #c8e6c9;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.12);
+    min-width: 220px; /* consistente con el partial */
+    z-index: 1100; /* sobre contenidos cercanos dentro del header aislado */
+    flex-direction: column;
+    padding: 8px; /* margen interno homogéneo */
+}
+
+.site-header .cram-dropdown:hover .cram-menu,
+.site-header .cram-dropdown:focus-within .cram-menu {
+    display: flex;
+}
+
+/* Mostrar el menú al togglear con JS (.open) */
+.site-header .cram-dropdown.open .cram-menu { display: flex; }
+
+/* En pantallas táctiles (≤820px), desactivar apertura por hover/focus */
+@media (max-width: 820px) {
+    .site-header .cram-dropdown:hover .cram-menu,
+    .site-header .cram-dropdown:focus-within .cram-menu { display: none !important; }
+    .site-header .cram-dropdown.open .cram-menu { display: flex !important; }
+    /* Evitar cambio de color del caret al hover, que luce como "salto" en táctiles */
+    .site-header .cram-toggle:hover .cram-caret{ border-top-color: var(--primary-600); }
+    .site-header .cram-toggle:hover { background-color: #fff; color: #2e7d32; border-color: #2e7d32; }
+}
+
+/* Zona puente para evitar cierre al llevar el mouse del botón al menú */
+.site-header .cram-dropdown::after{
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 220px;
+    height: 10px;
+}
+
+.site-header .cram-menu a,
+.site-header .cram-menu .cram-link {
+    color: #2e7d32;
+    padding: 10px 22px;
+    text-decoration: none;
+    font-weight: 600; /* unificar grosor con el resto del menú */
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: block;            /* anchors y botones se comportan igual */
+    font-family: inherit;      /* evitar font-family distinta en button */
+    font-size: 1.05rem;        /* tamaño consistente en todas las vistas */
+    line-height: 1.2;
+}
+/* Forzar que el botón del menú (Cerrar sesión) se vea como un item de lista */
+.site-header .cram-menu .cram-link {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+}
+/* Evitar subrayados y colores de enlace nativos en cualquier estado */
+.site-header .cram-menu a:link,
+.site-header .cram-menu a:visited,
+.site-header .cram-menu a:hover,
+.site-header .cram-menu a:active {
+    color: #2e7d32 !important;
+    text-decoration: none !important;
+}
+
+/* Seguridad: limitar imágenes e íconos genéricos dentro de tablas admin para que no "salten" */
+.table img, .table svg, .table i {
+    max-height: 24px;
+    max-width: 100%;
+}
+
+.site-header .cram-menu a:hover,
+.site-header .cram-menu .cram-link:hover {
+    background: #e8f5e9;
+}
+
+/* Tamaños consistentes de botones del header */
+.site-header .btn-login.btn-login-standalone{
+    padding: 12px 18px;
+    font-weight: 700;
+    border: 2px solid var(--primary-600);
+    font-size: 1.05rem;
+}
+.site-header .cram-dropdown .cram-toggle{
+    font-size: 1.05rem;
+    padding: 12px 18px;
+}
+
+/* ===== Estilos para la tabla de pedidos ===== */
+.pedidos-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 16px;
+}
+.pedidos-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(46,125,50,0.08);
+    overflow: hidden;
+}
+.pedidos-table th, .pedidos-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #e8f5e9;
+    text-align: left;
+}
+.pedidos-table th {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: bold;
+}
+.pedidos-table tr:last-child td {
+    border-bottom: none;
+}
+@media (max-width: 700px) {
+    .pedidos-table, .pedidos-table thead, .pedidos-table tbody, .pedidos-table th, .pedidos-table td, .pedidos-table tr {
+        display: block;
+    }
+    .pedidos-table th {
+        position: absolute;
+        left: -9999px;
+    }
+    .pedidos-table td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        margin-bottom: 12px;
+    }
+    .pedidos-table td:before {
+        position: absolute;
+        left: 8px;
+        top: 12px;
+        width: 45%;
+        white-space: nowrap;
+        font-weight: bold;
+        color: #2e7d32;
+        content: attr(data-label);
+    }
+}
+
+/* (Desactivado) Modo tarjetas en móvil para la tabla del catálogo.
+    Se eliminó para mantener filas tipo desktop también en móvil. */
+
+/* Solo para la vista de cuenta */
+.main-cuenta {
+    flex: 1;
+    padding: var(--header-offset, 128px) 0 0 0; /* usa altura dinámica del header */
+    max-width: none;
+    margin: 0;
+    display: block;
+}
+
+/* Páginas de administración con header sticky */
+.main-admin {
+    padding-top: calc(var(--header-offset, 96px) + 8px);
+}
+
+.main-cuenta .formulario.usuario {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    padding: 48px 4vw 32px 4vw;
+    border-radius: 0;
+    box-shadow: none;
+    background: #fff;
+}
+
+/* ===== Overrides modernos (no disruptivos) ===== */
+body {
+    color: var(--text-700);
+    background-color: var(--bg-50);
+}
+
+main h2 {
+    color: var(--primary-600);
+    border-bottom-color: var(--primary-500);
+}
+
+.site-header, footer {
+    background: linear-gradient(90deg, var(--primary-600) 70%, var(--primary-500) 100%);
+}
+
+.site-header .logo {
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.header-container a:hover .logo { box-shadow: var(--shadow-lg); }
+
+.site-header .btn-login,
+.site-header .cram-toggle,
+.btn-recuperar {
+    color: var(--primary-600);
+    border-color: var(--primary-600);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+.site-header .btn-login:hover,
+.site-header .cram-toggle:hover,
+.btn-recuperar:hover {
+    background: var(--primary-300);
+    color: #fff;
+    border-color: var(--primary-500);
+}
+
+.formulario {
+    border-color: var(--accent-100);
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.08);
+}
+.formulario:focus-within {
+    border-color: var(--primary-500);
+    box-shadow: 0 3px 14px rgba(46,125,50,0.12);
+}
+.formulario label { color: var(--text-700); }
+.formulario input,
+.formulario textarea,
+.formulario select {
+    border-color: var(--primary-200);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.formulario input:focus,
+.formulario textarea:focus,
+.formulario select:focus {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(56, 142, 60, 0.18);
+}
+
+.formulario .btn-ingresar {
+    background: var(--primary-600);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-snap), background-color var(--transition-fast), box-shadow var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    padding: 12px 18px;
+    font-size: 1.05em;
+    border: 2px solid transparent;
+}
+.formulario .btn-ingresar:hover { background: #1b5e20; }
+.formulario .btn-ingresar:active { transform: translateY(1px); }
+
+.login-actions.solo-boton { justify-content: flex-end; }
+.link-recuperar { color: var(--primary-600); font-weight: 600; text-decoration: none; }
+.link-recuperar:hover { text-decoration: underline; color: #1b5e20; }
+.link-recuperar::before { content: '¿'; }
+.link-recuperar::after { content: '?'; }
+
+/* Alinear botones dentro de .login-actions (evitar margen heredado) */
+.login-actions .btn-ingresar,
+.login-actions .btn-recuperar {
+    margin-top: 0;
+}
+
+.btn-recuperar {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 18px;
+    font-size: 1.05em;
+    line-height: 1;
+}
+
+/* (limpio selectores antiguos de Bootstrap dropdown para evitar interferencias) */
+
+/* ===== Vista compacta y centrada: Recuperar contraseña ===== */
+.main-forgot {
+    flex: 1;
+    display: flex;
+    align-items: center; /* centrado vertical real */
+    justify-content: center;
+    padding: 24px 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+    /* ocupa altura suficiente para que no se vea vacío y respete header/footer */
+    min-height: 70vh;
+    /* fondo sutil para dar cuerpo a la vista sin distraer */
+    background:
+        radial-gradient(60rem 60rem at 15% 20%, rgba(232,245,233,0.8) 0%, rgba(232,245,233,0) 55%),
+        radial-gradient(48rem 48rem at 85% 80%, rgba(200,230,201,0.6) 0%, rgba(200,230,201,0) 55%);
+}
+.formulario.forgot {
+    max-width: 540px;
+    padding: 20px 22px;
+    min-height: 0; /* sin reserva extra */
+}
+.main-forgot h2 {
+    font-size: 1.4em;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #a5d6a7;
+    padding-bottom: 6px;
+}
+.formulario.forgot .login-actions { margin-top: 12px; }
+
+/* Subtítulo descriptivo solo en recuperar contraseña */
+.formulario.forgot .form-subtitle {
+    margin-top: 2px;
+    margin-bottom: 12px;
+    color: var(--text-600);
+    font-size: 0.95em;
+}
+
+/* Si la pantalla es muy baja, priorizar que quede visible arriba */
+@media (max-height: 600px) {
+    .main-forgot { align-items: flex-start; padding-top: 12px; min-height: auto; }
+}
+
+/* ===== Responsive específico sección Sobre Nosotros (solo móvil) ===== */
+@media (max-width: 780px) {
+    .texto-imagenes { flex-direction: column; gap: 20px; }
+    .imagenes-almacenes { flex-direction: row; justify-content: center; gap: 16px; }
+    .imagenes-almacenes figure { flex: 1 1 45%; max-width: 180px; margin: 0 auto; }
+    .imagenes-almacenes img { max-width: 100%; height: auto; }
+    .informacion { margin-bottom: 24px; }
+    .texto p { margin-bottom: 14px; }
+    .imagen-entrada img { max-width: 420px; width: 100%; }
+}
+@media (max-width: 520px) {
+    .imagenes-almacenes { gap: 12px; }
+    .imagenes-almacenes figure { max-width: 150px; }
+    .imagenes-almacenes img { border-radius: 8px; }
+    .imagen-entrada img { max-width: 330px; }
+    .texto p { font-size: 0.95rem; }
+}
+@media (max-width: 380px) {
+    .imagenes-almacenes { flex-wrap: wrap; }
+    .imagenes-almacenes figure { flex: 1 1 100%; max-width: 200px; }
+    .imagen-entrada img { max-width: 260px; }
+}
