@@ -31,7 +31,7 @@ export async function createOrder(req, res, next) {
     }
 
     const created = await prisma.$transaction(async (tx) => {
-      const userId = req.user?.id || null;
+      const userId = req.user?.sub || null;
       const order = await tx.orders.create({ data: { user_id: userId, status: 'pending', total, comment: comment || null } });
       for (const oi of orderItemsData) {
         await tx.order_items.create({ data: { ...oi, order_id: order.id } });

@@ -2,7 +2,8 @@ import { prisma } from '../config/prisma.js';
 
 export async function getAccount(req, res, next) {
   try {
-    const id = req.user?.id;
+    const id = req.user?.sub;
+    if (!id) return res.status(401).json({ error: 'No autorizado' });
     const user = await prisma.users.findUnique({
       where: { id },
       select: { id: true, name: true, role: true, email: true, phone: true, email_pending: true }
@@ -14,7 +15,8 @@ export async function getAccount(req, res, next) {
 
 export async function updateAccount(req, res, next) {
   try {
-    const id = req.user?.id;
+    const id = req.user?.sub;
+    if (!id) return res.status(401).json({ error: 'No autorizado' });
     const { email, phone } = req.body || {};
 
     // Validaciones básicas
@@ -37,12 +39,16 @@ export async function updateAccount(req, res, next) {
       select: { id: true, name: true, role: true, email: true, phone: true, email_pending: true }
     });
     res.json(updated);
-  } catch (err) { next(err); }
+  } catch (err) {
+    if (err?.code === 'P2002') return res.status(409).json({ error: 'Email o teléfono ya existe' });
+    next(err);
+  }
 }
 
 export async function myOrders(req, res, next) {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.sub;
+    if (!userId) return res.status(401).json({ error: 'No autorizado' });
     const page = Math.max(1, parseInt(req.query.page || '1', 10));
     const perPage = Math.min(20, Math.max(5, parseInt(req.query.per || '10', 10)));
     const skip = (page - 1) * perPage;
@@ -75,7 +81,8 @@ export async function myOrders(req, res, next) {
 
 export async function orderItems(req, res, next) {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.sub;
+    if (!userId) return res.status(401).json({ error: 'No autorizado' });
     const id = parseInt(req.params.id, 10);
     const order = await prisma.orders.findFirst({ where: { id, user_id: userId } });
     if (!order) return res.status(404).json({ error: 'Pedido no encontrado' });

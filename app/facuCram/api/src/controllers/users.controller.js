@@ -22,7 +22,7 @@ export async function listUsers(req, res, next) {
         orderBy: { created_at: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
-        select: { id: true, name: true, role: true, is_disabled: true, created_at: true },
+        select: { id: true, name: true, role: true, email: true, phone: true, is_disabled: true, created_at: true },
       }),
     ]);
     res.json({ page, pageSize, total, items });
@@ -54,6 +54,7 @@ export async function createUser(req, res, next) {
     const now = new Date();
     const user = await prisma.users.create({
       data: { id, name, role, email, phone, created_at: now, updated_at: now },
+      select: { id: true, name: true, role: true, email: true, phone: true, is_disabled: true, created_at: true }
     });
     res.status(201).json(user);
   } catch (err) {
@@ -74,7 +75,11 @@ export async function updateUser(req, res, next) {
     if (typeof req.body.phone === 'string') data.phone = req.body.phone.trim();
     if (typeof req.body.is_disabled === 'boolean') data.is_disabled = req.body.is_disabled;
     data.updated_at = new Date();
-    const user = await prisma.users.update({ where: { id }, data });
+    const user = await prisma.users.update({
+      where: { id },
+      data,
+      select: { id: true, name: true, role: true, email: true, phone: true, is_disabled: true, created_at: true }
+    });
     res.json(user);
   } catch (err) {
     if (err?.code === 'P2025') return res.status(404).json({ error: 'Usuario no encontrado' });
