@@ -3,6 +3,8 @@ import authRoutes from './auth.routes.js';
 import newsRoutes from './news.routes.js';
 import catalogRoutes from './catalog.routes.js';
 import ordersRoutes from './orders.routes.js';
+import usersRoutes from './users.routes.js';
+import accountRoutes from './account.routes.js';
 import { prisma } from '../config/prisma.js';
 
 export const apiRouter = Router();
@@ -20,3 +22,5 @@ apiRouter.use('/auth', authRoutes);
 apiRouter.use('/news', newsRoutes);
 apiRouter.use('/catalogo', catalogRoutes);
 apiRouter.use('/pedidos', ordersRoutes);
+apiRouter.use('/usuarios', usersRoutes);
+apiRouter.use('/account', accountRoutes);

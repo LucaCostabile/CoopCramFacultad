@@ -1,26 +1,44 @@
 import { useState } from 'react';
-import { api } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Login() {
-  const [id, setId] = useState('');
+  const [loginField, setLoginField] = useState('');
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const nav = useNavigate();
+  const { login } = useAuth();
+
   const submit = async (e) => {
     e.preventDefault();
+    setLoading(true); setMsg('');
     try {
-      const r = await api.post('/auth/login', { id, password });
-      setMsg('Login OK (mock): ' + r.data.user.name);
+      const r = await login(loginField, password);
+      if (r?.mustCreatePassword) {
+        nav('/crear-contrasena');
+      } else {
+        nav('/');
+      }
     } catch (e) {
-      setMsg('Error de login');
+      setMsg('Credenciales inválidas');
+    } finally {
+      setLoading(false);
     }
   };
   return (
-    <form onSubmit={submit}>
-      <h1>Login</h1>
-      <input placeholder="ID" value={id} onChange={e=>setId(e.target.value)} />
-      <input placeholder="Password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-      <button>Entrar</button>
-      <div>{msg}</div>
-    </form>
+    <main className="container" style={{padding:'16px'}}>
+      <form onSubmit={submit} className="formulario" style={{maxWidth:480, margin:'24px auto'}}>
+        <h2 style={{textAlign:'center', color:'var(--brand)', marginBottom:18}}>Iniciar Sesión</h2>
+        <label>ID, Email o Celular</label>
+        <input placeholder="Ingresá tu ID, email o celular" value={loginField} onChange={e=>setLoginField(e.target.value)} required />
+        <label>Contraseña</label>
+        <input placeholder="Contraseña" type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
+        <div className="login-actions">
+          <button className="btn btn-success w-100" disabled={loading}>{loading? 'Ingresando...' : 'Ingresar'}</button>
+        </div>
+        {msg && <div className="error-msg" style={{marginTop:8}}>{msg}</div>}
+      </form>
+    </main>
   );
 }

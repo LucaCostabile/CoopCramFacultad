@@ -83,3 +83,25 @@ Próximos pasos recomendados
 - Conectar DB en config/db.js y completar services/*.
 - Implementar consultas filtradas en CatalogController (services/product.service.js).
 - Mejorar páginas en web con llamados reales a la API.
+
+# 1) Instalar dependencias (ya hecho si se ejecutó antes)
+npm install
+
+# 2) Generar Prisma Client (ya hecho si se ejecutó antes)
+npx prisma generate
+
+# 3) Importar usuarios:
+# Opción A: si dejas el archivo CLIENTES-CRAM.xlsx en la carpeta api
+npm run import:users
+
+# Opción B: especificando la ruta del Excel
+node .\src\scripts\import_users.js "E:\ruta\al\archivo\CLIENTES-CRAM.xlsx"
+
+# 4) Importar productos:
+npm run import:products
+
+Primer inicio de sesion
+  entraras con las credenciales de administrador:
+    ID: 9990
+    Contraseña: 9990-CRAM
+  con esto vas a entrar como administrador a la pagina
