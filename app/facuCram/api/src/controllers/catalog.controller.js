@@ -1,14 +1,61 @@
-import { prisma } from '../config/prisma.js';
-import { paginate } from '../utils/pagination.js';
+import { prisma } from "../config/prisma.js";
+
+/**
+ * Convierte BigInt y Decimal a tipos serializables
+ */
+function convertBigInt(value) {
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  if (
+    value !== null &&
+    typeof value === "object" &&
+    "d" in value &&
+    "e" in value &&
+    "s" in value
+  ) {
+    return parseFloat(value.toString());
+  }
+  if (Array.isArray(value)) {
+    return value.map(convertBigInt);
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, convertBigInt(v)])
+    );
+  }
+  return value;
+}
+
+/**
+ * Construir respuesta paginada sin hacer slice (ya viene paginado de Prisma)
+ */
+function buildPaginatedResponse(items, page, perPage, total) {
+  const last_page = Math.max(1, Math.ceil(total / perPage));
+  const current_page = Math.min(page, last_page);
+
+  return {
+    data: convertBigInt(items),
+    total,
+    per_page: perPage,
+    current_page,
+    last_page,
+  };
+}
 
 export async function getProducts(req, res, next) {
   try {
-    const q = (req.query.q || '').toString().trim();
-    const only_stock = ['1', 'true', 'on'].includes((req.query.only_stock || '').toString());
-    const motor = (req.query.motor || '').toString().trim();
-    const rubro = (req.query.rubro || '').toString().trim();
-    const per_page = Math.max(10, Math.min(parseInt(req.query.per_page || '50', 10), 100));
-    const page = Math.max(1, parseInt(req.query.page || '1', 10));
+    const q = (req.query.q || "").toString().trim();
+    const only_stock = ["1", "true", "on"].includes(
+      (req.query.only_stock || "").toString()
+    );
+    const motor = (req.query.motor || "").toString().trim();
+    const rubro = (req.query.rubro || "").toString().trim();
+    const per_page = Math.max(
+      10,
+      Math.min(parseInt(req.query.per_page || "50", 10), 100)
+    );
+    const page = Math.max(1, parseInt(req.query.page || "1", 10));
 
     // Filtros
     const where = { is_active: true };
@@ -17,9 +64,10 @@ export async function getProducts(req, res, next) {
     if (rubro) where.rubro = rubro;
 
     // Búsqueda por palabras: construir OR de palabras sobre varios campos
+    // MySQL es case-insensitive por defecto, no necesita mode: "insensitive"
     if (q) {
       const words = q.split(/\s+/).filter(Boolean);
-      where.AND = words.map(w => ({
+      where.AND = words.map((w) => ({
         OR: [
           { articulo: { contains: w } },
           { rubro: { contains: w } },
@@ -28,19 +76,21 @@ export async function getProducts(req, res, next) {
           { nro_fabrica: { contains: w } },
           { info_tecnica: { contains: w } },
           { mv: { contains: w } },
-        ]
+        ],
       }));
     }
 
     const total = await prisma.products.count({ where });
     const data = await prisma.products.findMany({
       where,
-      orderBy: [{ articulo: 'asc' }, { rubro: 'asc' }],
+      orderBy: [{ articulo: "asc" }, { rubro: "asc" }],
       skip: (page - 1) * per_page,
       take: per_page,
     });
-    res.json(paginate(data, page, per_page, total));
+
+    res.json(buildPaginatedResponse(data, page, per_page, total));
   } catch (err) {
+    console.error("Error en getProducts:", err);
     next(err);
   }
 }
@@ -48,38 +98,48 @@ export async function getProducts(req, res, next) {
 export async function getFilters(_req, res, next) {
   try {
     const motorsRows = await prisma.products.findMany({
-      where: { motor: { not: null }, is_active: true },
-      distinct: ['motor'],
-      orderBy: { motor: 'asc' },
+      where: {
+        motor: { not: null, not: "" },
+        is_active: true,
+      },
+      distinct: ["motor"],
+      orderBy: { motor: "asc" },
       select: { motor: true },
     });
     const rubrosRows = await prisma.products.findMany({
-      where: { rubro: { not: null }, is_active: true },
-      distinct: ['rubro'],
-      orderBy: { rubro: 'asc' },
+      where: {
+        rubro: { not: null, not: "" },
+        is_active: true,
+      },
+      distinct: ["rubro"],
+      orderBy: { rubro: "asc" },
       select: { rubro: true },
     });
-    const motors = motorsRows.map(r => r.motor).filter(Boolean);
-    const rubros = rubrosRows.map(r => r.rubro).filter(Boolean);
+    const motors = motorsRows.map((r) => r.motor).filter(Boolean);
+    const rubros = rubrosRows.map((r) => r.rubro).filter(Boolean);
     res.json({ motors, rubros });
   } catch (err) {
+    console.error("Error en getFilters:", err);
     next(err);
   }
 }
 
 export async function getRubroCounts(req, res, next) {
   try {
-    // reutilizar filtros básicos
-    const q = (req.query.q || '').toString().trim();
-    const only_stock = ['1', 'true', 'on'].includes((req.query.only_stock || '').toString());
-    const motor = (req.query.motor || '').toString().trim();
+    const q = (req.query.q || "").toString().trim();
+    const only_stock = ["1", "true", "on"].includes(
+      (req.query.only_stock || "").toString()
+    );
+    const motor = req.query.motor ? req.query.motor.toString().trim() : "";
 
     const where = { is_active: true };
     if (only_stock) where.in_stock = true;
     if (motor) where.motor = motor;
+
+    // Búsqueda de texto (MySQL es case-insensitive por defecto)
     if (q) {
       const words = q.split(/\s+/).filter(Boolean);
-      where.AND = words.map(w => ({
+      where.AND = words.map((w) => ({
         OR: [
           { articulo: { contains: w } },
           { rubro: { contains: w } },
@@ -88,20 +148,28 @@ export async function getRubroCounts(req, res, next) {
           { nro_fabrica: { contains: w } },
           { info_tecnica: { contains: w } },
           { mv: { contains: w } },
-        ]
+        ],
       }));
     }
+
+    // Agrupar solo rubros con productos activos y con filtro aplicado
     const rows = await prisma.products.groupBy({
-      by: ['rubro'],
-      where: { ...where, rubro: { not: null } },
+      by: ["rubro"],
+      where: {
+        ...where,
+        rubro: { not: null, not: "" },
+      },
       _count: { _all: true },
     });
+
     const sorted = rows
-      .filter(r => r.rubro)
-      .sort((a,b)=> (a.rubro||'').localeCompare(b.rubro||''))
-      .map(r => ({ rubro: r.rubro, total: r._count._all }));
+      .filter((r) => r.rubro && r.rubro.trim() !== "")
+      .sort((a, b) => (a.rubro || "").localeCompare(b.rubro || ""))
+      .map((r) => ({ rubro: r.rubro, total: r._count._all }));
+
     res.json(sorted);
   } catch (err) {
+    console.error("Error en getRubroCounts:", err);
     next(err);
   }
 }
