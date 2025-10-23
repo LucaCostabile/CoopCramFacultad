@@ -8,6 +8,7 @@ import Admin from "./pages/Admin.jsx";
 import AdminUsers from "./pages/AdminUsers.jsx";
 import AdminUserCreate from "./pages/AdminUserCreate.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import OrdersDebug from "./pages/Orders.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 
 export default function App() {
@@ -71,6 +72,14 @@ export default function App() {
             element={
               <ProtectedRoute roles={["administrador", "soporte"]}>
                 <AdminUserCreate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <ProtectedRoute roles={["administrador", "soporte"]}>
+                <OrdersDebug />
               </ProtectedRoute>
             }
           />

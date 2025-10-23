@@ -49,10 +49,8 @@ export default function OrdersDebug() {
 
   return (
     <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1>📋 Pedidos Registrados (Debug)</h1>
-      <button onClick={cargarPedidos} style={{ marginBottom: "20px" }}>
-        🔄 Actualizar
-      </button>
+      <h1>📋 Pedidos en Curso </h1>
+      <button onClick={cargarPedidos}>🔄 Actualizar</button>
 
       <p>
         <strong>Total de pedidos:</strong> {pedidos.length}
@@ -74,18 +72,18 @@ export default function OrdersDebug() {
                 backgroundColor: "#f9f9f9",
               }}
             >
-              <h3>Pedido #{pedido.id}</h3>
+              <h3>Orden #{pedido.id}</h3>
               <p>
-                <strong>Estado:</strong> {pedido.status}
+                <strong>Cliente:</strong> {pedido.client_name || "Sin cliente"}
+              </p>
+              <p>
+                <strong>Fecha:</strong> {pedido.created_at}
               </p>
               <p>
                 <strong>Total:</strong> ${pedido.total}
               </p>
               <p>
-                <strong>Usuario:</strong> {pedido.user_id || "Sin usuario"}
-              </p>
-              <p>
-                <strong>Fecha:</strong> {pedido.created_at}
+                <strong>Estado:</strong> {pedido.status}
               </p>
               <p>
                 <strong>Comentario:</strong>{" "}
@@ -107,19 +105,6 @@ export default function OrdersDebug() {
               )}
 
               <hr />
-              <details>
-                <summary>Ver JSON completo</summary>
-                <pre
-                  style={{
-                    backgroundColor: "#eee",
-                    padding: "10px",
-                    overflow: "auto",
-                    fontSize: "12px",
-                  }}
-                >
-                  {JSON.stringify(pedido, null, 2)}
-                </pre>
-              </details>
             </div>
           ))}
         </div>

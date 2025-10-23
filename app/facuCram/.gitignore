@@ -39,13 +39,11 @@ Thumbs.db
 *.swp
 *.swo
 
-# Prisma (específico para tu proyecto)
-/app/facuCram/api/node_modules/.prisma/
-/app/facuCram/api/node_modules/@prisma/
-/app/facuCram/api/node_modules/prisma/
-/app/facuCram/web/node_modules/.prisma/
-/app/facuCram/web/node_modules/@prisma/
-/app/facuCram/web/node_modules/prisma/
+# Prisma
+app/facuCram/api/node_modules/.prisma/client/
+
+# Vite
+app/facuCram/web/node_modules/.vite/
 
 # Cache de npm
 .npm

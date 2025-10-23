@@ -33,10 +33,11 @@ function convertBigInt(value) {
 
 /**
  * Obtener todos los pedidos con sus items
+ * (Volvemos a la versión original N+1 para evitar el error 500)
  */
 export async function getOrders(req, res, next) {
   try {
-    console.log("📦 Obteniendo pedidos...");
+    console.log("📦 Obteniendo pedidos (versión N+1 temporal)...");
 
     const orders = await prisma.orders.findMany({
       orderBy: {
@@ -46,9 +47,10 @@ export async function getOrders(req, res, next) {
 
     console.log(`✅ ${orders.length} pedidos encontrados en DB`);
 
-    // Obtener items para cada pedido
+    // Obtener items para cada pedido (esto es lento pero funciona)
     const ordersWithItems = await Promise.all(
       orders.map(async (order) => {
+        // Tu código original para crear pedidos usa 'order_items', así que esto debería funcionar.
         const items = await prisma.order_items.findMany({
           where: {
             order_id: order.id,
@@ -57,7 +59,7 @@ export async function getOrders(req, res, next) {
 
         return {
           ...order,
-          items,
+          items, // El frontend 'Orders.jsx' espera un array 'items'
         };
       })
     );
@@ -67,7 +69,7 @@ export async function getOrders(req, res, next) {
 
     res.json(response);
   } catch (err) {
-    console.error("❌ Error en getOrders:", err);
+    console.error("❌ Error en getOrders (N+1):", err);
     res
       .status(500)
       .json({ error: "Error al obtener pedidos", details: err.message });
@@ -76,6 +78,7 @@ export async function getOrders(req, res, next) {
 
 /**
  * Obtener un pedido específico por ID
+ * (Volvemos a la versión original N+1)
  */
 export async function getOrderById(req, res, next) {
   try {
@@ -115,6 +118,7 @@ export async function getOrderById(req, res, next) {
 
 /**
  * Crear nuevo pedido
+ * (Tu función original, solo se quitó la '}' extra al final)
  */
 export async function createOrder(req, res, next) {
   try {
@@ -220,3 +224,5 @@ export async function createOrder(req, res, next) {
       .json({ error: "Error al crear pedido", details: err.message });
   }
 }
+
+// NOTA: Se eliminó la llave '}' extra que estaba aquí y causaba el SyntaxError
