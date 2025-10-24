@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Login() {
@@ -36,6 +36,9 @@ export default function Login() {
         <input placeholder="Contraseña" type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
         <div className="login-actions">
           <button className="btn btn-success w-100" disabled={loading}>{loading? 'Ingresando...' : 'Ingresar'}</button>
+        </div>
+        <div style={{marginTop:10, textAlign:'center'}}>
+          <Link to="/olvide-contrasena" className="muted">¿Olvidaste tu contraseña?</Link>
         </div>
         {msg && <div className="error-msg" style={{marginTop:8}}>{msg}</div>}
       </form>

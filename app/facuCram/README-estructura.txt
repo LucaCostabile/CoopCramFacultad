@@ -79,10 +79,12 @@ Cómo empezar (resumen)
    - Instalar dependencias y correr: npm install; npm run dev.
 
 Próximos pasos recomendados
-- Implementar autenticación real (JWT) en api/middlewares/auth.js y auth.controller.js.
-- Conectar DB en config/db.js y completar services/*.
+- Implementar autenticación real (JWT) en api/middlewares/auth.js y auth.controller.js.  HECHO
+- Conectar DB en config/db.js y completar services/*. REVISEN EL .ENV PARA CADA UNO
 - Implementar consultas filtradas en CatalogController (services/product.service.js).
 - Mejorar páginas en web con llamados reales a la API.
+
+Desde la carpeta api son los siguientes comandos
 
 # 1) Instalar dependencias (ya hecho si se ejecutó antes)
 npm install

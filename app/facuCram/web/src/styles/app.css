@@ -212,11 +212,7 @@ thead th {
   margin-bottom: 20px;
 }
 
-.page-catalogo {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
-}
+
 
 /* Búsqueda y Filtros */
 .busqueda {
@@ -404,11 +400,11 @@ input[type="text"] {
 #scroll-buttons {
   position: fixed;
   right: 20px;
-  bottom: 40px;
+  bottom: 84px; /* elevar sobre el footer */
   display: flex;
   flex-direction: column;
   gap: 10px;
-  z-index: 1000;
+  z-index: 10050; /* por encima de header/footer y backdrop comunes */
 }
 
 #scroll-buttons button {
@@ -615,7 +611,7 @@ input[type="text"] {
   /* Botones de scroll más pequeños */
   #scroll-buttons {
     right: 15px;
-    bottom: 30px;
+    bottom: 96px; /* más alto en pantallas chicas para evitar solaparse */
   }
 
   #scroll-buttons button {
@@ -647,9 +643,7 @@ input[type="text"] {
     padding: 15px;
   }
 
-  .page-catalogo {
-    padding: 10px;
-  }
+
 
   .busqueda {
     padding: 15px;

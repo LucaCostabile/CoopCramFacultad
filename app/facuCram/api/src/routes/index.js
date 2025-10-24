@@ -5,6 +5,7 @@ import catalogRoutes from './catalog.routes.js';
 import ordersRoutes from './orders.routes.js';
 import usersRoutes from './users.routes.js';
 import accountRoutes from './account.routes.js';
+import salesRoutes from './sales.routes.js';
 import { prisma } from '../config/prisma.js';
 
 export const apiRouter = Router();
@@ -24,3 +25,4 @@ apiRouter.use('/catalogo', catalogRoutes);
 apiRouter.use('/pedidos', ordersRoutes);
 apiRouter.use('/usuarios', usersRoutes);
 apiRouter.use('/account', accountRoutes);
+apiRouter.use('/sales', salesRoutes);

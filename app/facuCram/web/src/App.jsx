@@ -1,47 +1,31 @@
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import Catalog from "./pages/Catalog.jsx";
 import Login from "./pages/Login.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 import CreatePassword from "./pages/CreatePassword.jsx";
 import Account from "./pages/Account.jsx";
 import Admin from "./pages/Admin.jsx";
 import AdminUsers from "./pages/AdminUsers.jsx";
 import AdminUserCreate from "./pages/AdminUserCreate.jsx";
+import AdminSales from "./pages/AdminSales.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import OrdersDebug from "./pages/Orders.jsx";
-import { useAuth } from "./context/AuthContext.jsx";
+import Header from "./components/Header.jsx";
+import NewsManage from "./pages/NewsManage.jsx";
 
 export default function App() {
-  const { user, logout } = useAuth();
-  const role = user?.role;
   return (
-    <div>
-      <nav
-        className="topbar"
-        style={{ padding: 12, display: "flex", gap: 12, alignItems: "center" }}
-      >
-        <span className="brand">Cooperativa CRAM</span>
-        <div className="nav">
-          <Link to="/">Inicio</Link>
-          <Link to="/catalogo">Catálogo</Link>
-          {user && <Link to="/cuenta">Mi cuenta</Link>}
-          {(role === "administrador" || role === "soporte") && (
-            <Link to="/admin">Admin</Link>
-          )}
-        </div>
-        <div style={{ marginLeft: "auto" }}>
-          {!user ? (
-            <Link to="/login">Iniciar sesión</Link>
-          ) : (
-            <button onClick={logout}>Salir</button>
-          )}
-        </div>
-      </nav>
-      <main style={{ padding: 16 }}>
+    <div className="app-shell">
+      <Header />
+      <main>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/catalogo" element={<Catalog />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/olvide-contrasena" element={<ForgotPassword />} />
+          <Route path="/restablecer-contrasena" element={<ResetPassword />} />
           <Route path="/crear-contrasena" element={<CreatePassword />} />
           <Route
             path="/cuenta"
@@ -56,6 +40,22 @@ export default function App() {
             element={
               <ProtectedRoute roles={["administrador", "soporte"]}>
                 <Admin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/sales"
+            element={
+              <ProtectedRoute roles={["administrador"]}>
+                <AdminSales />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/news"
+            element={
+              <ProtectedRoute roles={["administrador", "admin_marketing"]}>
+                <NewsManage />
               </ProtectedRoute>
             }
           />
@@ -78,13 +78,16 @@ export default function App() {
           <Route
             path="/admin/orders"
             element={
-              <ProtectedRoute roles={["administrador", "soporte"]}>
+              <ProtectedRoute roles={["administrador", "soporte", "trabajador"]}>
                 <OrdersDebug />
               </ProtectedRoute>
             }
           />
         </Routes>
       </main>
+      <footer>
+        <p>&copy; {new Date().getFullYear()} Cooperativa CRAM. Todos los derechos reservados.</p>
+      </footer>
     </div>
   );
 }

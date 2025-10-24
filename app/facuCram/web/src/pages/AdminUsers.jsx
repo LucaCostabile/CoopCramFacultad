@@ -38,15 +38,36 @@ export default function AdminUsers(){
   const pageSize=20;
   const pages=useMemo(()=>Math.max(1, Math.ceil(total/pageSize)),[total]);
 
+  const toBool = (v)=>{
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'number') return v !== 0;
+    if (typeof v === 'string') return v === '1' || v.toLowerCase() === 'true';
+    return !!v;
+  };
+  const normalizeUser = (u)=> ({ ...u, is_disabled: toBool(u?.is_disabled) });
+
   const load=async()=>{
-    const r=await api.get('/usuarios',{params:{search:q,page,pageSize}});
-    setRows(r.data.items);
+    const r=await api.get('/usuarios',{params:{search:q,page,pageSize,t:Date.now()}});
+    const items = Array.isArray(r?.data?.items) ? r.data.items.map(normalizeUser) : [];
+    setRows(items);
     setTotal(r.data.total);
   };
   useEffect(()=>{ load(); },[q,page]);
 
-  const save=async(id,data)=>{ await api.put(`/usuarios/${id}`,data); load(); };
-  const toggle=async(id,is_disabled)=>{ await api.patch(`/usuarios/${id}/disable`,{is_disabled}); load(); };
+  const save=async(id,data)=>{
+    // Guardar y actualizar la fila localmente para evitar depender de un re-fetch inmediato
+    const r = await api.put(`/usuarios/${id}`, data);
+    const updated = normalizeUser(r?.data || {});
+    setRows(prev => prev.map(u => (u.id === id ? { ...u, ...updated } : u)));
+  };
+  const toggle=async(id,is_disabled)=>{
+    // Solución pragmática: aplicar cambio en servidor y recargar toda la página para reflejar el estado
+    try {
+      await api.patch(`/usuarios/${id}/disable`, { is_disabled });
+    } finally {
+      window.location.reload();
+    }
+  };
 
   return (
     <main className="container main-admin" style={{padding:'16px'}}>
@@ -86,6 +107,9 @@ export default function AdminUsers(){
 function RowEmailPhone({ u, onSave, onToggle }){
   const [email, setEmail] = useState(u.email || '');
   const [phone, setPhone] = useState(u.phone || '');
+  // Mantener inputs sincronizados si el usuario se actualiza desde fuera
+  useEffect(() => { setEmail(u.email || ''); }, [u.email]);
+  useEffect(() => { setPhone(u.phone || ''); }, [u.phone]);
   return (
     <tr>
       <td><strong>{u.id}</strong></td>
@@ -96,9 +120,11 @@ function RowEmailPhone({ u, onSave, onToggle }){
       <td>
         <span className="badge badge-secondary">{u.is_disabled ? 'Inhabilitado' : 'Activo'}</span>
       </td>
-      <td>
-        <button className="btn btn-sm btn-primary" onClick={()=>onSave(u.id,{email,phone})}>Guardar</button>{' '}
-        <button className="btn btn-sm btn-outline" onClick={()=>onToggle(u.id,!u.is_disabled)}>{u.is_disabled?'Habilitar':'Inhabilitar'}</button>
+      <td className="actions-cell">
+        <div className="actions">
+          <button className="btn btn-sm btn-primary" disabled={u.__updating} onClick={()=>onSave(u.id,{email,phone})}>Guardar</button>
+          <button className="btn btn-sm btn-outline btn-toggle" disabled={u.__updating} onClick={()=>onToggle(u.id,!u.is_disabled)}>{u.__updating ? 'Actualizando…' : (u.is_disabled?'Habilitar':'Inhabilitar')}</button>
+        </div>
       </td>
     </tr>
   );

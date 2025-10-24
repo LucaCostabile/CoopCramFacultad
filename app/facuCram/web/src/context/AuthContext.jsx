@@ -27,6 +27,26 @@ export function AuthProvider({ children }){
     }
   }, [token]);
 
+  // Mantener los datos del usuario sincronizados con /account (por ej. email actualizado)
+  useEffect(()=>{
+    let alive = true;
+    async function refresh(){
+      if (!token) return;
+      try{
+        const r = await api.get('/account');
+        if (!alive) return;
+        setUser(prev => {
+          const merged = { ...(prev || {}), ...(r.data || {}) };
+          try { localStorage.setItem('auth', JSON.stringify({ token, user: merged })); } catch {}
+          return merged;
+        });
+      } catch {}
+    }
+    refresh();
+    const id = setInterval(refresh, 60_000); // refresco periódico por si cambia en otra vista
+    return ()=>{ alive = false; clearInterval(id); };
+  }, [token]);
+
   const saveSession = (token, user) => {
     setToken(token); setUser(user);
     localStorage.setItem('auth', JSON.stringify({ token, user }));
