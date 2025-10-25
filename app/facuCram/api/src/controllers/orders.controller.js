@@ -224,5 +224,228 @@ export async function createOrder(req, res, next) {
       .json({ error: "Error al crear pedido", details: err.message });
   }
 }
+  export const actualizarEstadoPedido = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
 
-// NOTA: Se eliminó la llave '}' extra que estaba aquí y causaba el SyntaxError
+  const estadosValidos = ["pending", "preparing", "delivered"];
+  if (!estadosValidos.includes(status)) {
+    return res.status(400).json({ ok: false, message: "Estado inválido" });
+  }
+
+  try {
+    const pedido = await prisma.orders.update({
+      where: { id: BigInt(id) },
+      data: { status },
+    });
+
+    const response = convertBigInt({
+      ok: true,
+      pedido
+    });
+
+    return res.json(response);
+  } catch (error) {
+    console.error("❌ Error al actualizar estado:", error);
+    return res.status(500).json({ ok: false, message: "Error interno" });
+  }
+};
+export const eliminarPedido = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    console.log(`🗑️ Eliminando pedido ${id}...`);
+
+    // Eliminar en una transacción para asegurar consistencia
+    await prisma.$transaction(async (tx) => {
+      // Primero eliminar los items del pedido
+      await tx.order_items.deleteMany({
+        where: { order_id: BigInt(id) }
+      });
+
+      // Luego eliminar el pedido
+      await tx.orders.delete({
+        where: { id: BigInt(id) }
+      });
+    });
+
+    console.log(`✅ Pedido ${id} eliminado correctamente`);
+    return res.json({ ok: true, message: "Pedido eliminado" });
+  } catch (error) {
+    console.error("❌ Error al eliminar pedido:", error);
+    return res.status(500).json({ ok: false, message: "Error al eliminar pedido" });
+  }
+};
+export async function getOrderByIdWithDetails(req, res, next) {
+  try {
+    const { id } = req.params;
+    console.log(`📦 Obteniendo pedido ${id} con detalles...`);
+
+    const order = await prisma.orders.findUnique({
+      where: {
+        id: BigInt(id),
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        error: "Pedido no encontrado",
+      });
+    }
+
+    // Obtener items del pedido
+    const items = await prisma.order_items.findMany({
+      where: {
+        order_id: BigInt(id),
+      },
+    });
+
+    // Obtener información completa de cada producto
+    const itemsWithProductInfo = await Promise.all(
+      items.map(async (item) => {
+        const product = await prisma.products.findUnique({
+          where: { id: item.product_id },
+        });
+
+        return {
+          ...item,
+          product_name: product?.articulo || "N/A",
+          product_info: product?.info_tecnica || "",
+        };
+      })
+    );
+
+    const response = convertBigInt({
+      ...order,
+      items: itemsWithProductInfo,
+    });
+
+    console.log("✅ Pedido obtenido con información completa");
+    res.json(response);
+  } catch (err) {
+    console.error("❌ Error en getOrderByIdWithDetails:", err);
+    res
+      .status(500)
+      .json({ error: "Error al obtener pedido", details: err.message });
+  }
+}
+
+/**
+ * Actualizar la cantidad de un item del pedido
+ */
+export const actualizarCantidadItem = async (req, res) => {
+  const { id, itemId } = req.params;
+  const { quantity } = req.body;
+
+  if (!Number.isInteger(quantity) || quantity < 1) {
+    return res.status(400).json({ 
+      ok: false, 
+      message: "La cantidad debe ser un número mayor a 0" 
+    });
+  }
+
+  try {
+    console.log(`🔄 Actualizando item ${itemId} del pedido ${id}...`);
+
+    // Obtener el item actual
+    const item = await prisma.order_items.findFirst({
+      where: {
+        id: BigInt(itemId),
+        order_id: BigInt(id),
+      },
+    });
+
+    if (!item) {
+      return res.status(404).json({ 
+        ok: false, 
+        message: "Item no encontrado" 
+      });
+    }
+
+    // ✅ VALIDAR STOCK DEL PRODUCTO
+    const product = await prisma.products.findUnique({
+      where: { id: item.product_id },
+    });
+
+    if (!product) {
+      return res.status(404).json({ 
+        ok: false, 
+        message: "Producto no encontrado" 
+      });
+    }
+
+    // Verificar si hay stock suficiente
+    if (product.stock && Number(product.stock) < quantity) {
+      return res.status(400).json({ 
+        ok: false, 
+        message: `Stock insuficiente. Stock disponible: ${product.stock}` 
+      });
+    }
+
+    // Verificar si el producto está activo y en stock
+    if (!product.is_active) {
+      return res.status(400).json({ 
+        ok: false, 
+        message: "El producto está inactivo" 
+      });
+    }
+
+    if (!product.in_stock) {
+      return res.status(400).json({ 
+        ok: false, 
+        message: "El producto no tiene stock disponible" 
+      });
+    }
+
+    // Calcular nuevo subtotal
+    const unit_price = Number(item.unit_price);
+    const subtotal = unit_price * quantity;
+
+    // Actualizar el item
+    await prisma.order_items.update({
+      where: { id: BigInt(itemId) },
+      data: {
+        quantity,
+        subtotal,
+      },
+    });
+
+    // Recalcular el total del pedido
+    const allItems = await prisma.order_items.findMany({
+      where: { order_id: BigInt(id) },
+    });
+
+    const newTotal = allItems.reduce((sum, it) => {
+      const itemSubtotal = it.id === BigInt(itemId) 
+        ? subtotal 
+        : Number(it.subtotal);
+      return sum + itemSubtotal;
+    }, 0);
+
+    // Actualizar el total del pedido
+    await prisma.orders.update({
+      where: { id: BigInt(id) },
+      data: { total: newTotal },
+    });
+
+    console.log("✅ Cantidad actualizada correctamente");
+
+    const response = convertBigInt({
+      ok: true,
+      item: {
+        id: itemId,
+        quantity,
+        subtotal,
+      },
+      orderTotal: newTotal,
+    });
+
+    return res.json(response);
+  } catch (error) {
+    console.error("❌ Error al actualizar cantidad:", error);
+    return res.status(500).json({ 
+      ok: false, 
+      message: "Error al actualizar cantidad" 
+    });
+  }
+};
