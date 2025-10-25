@@ -93,7 +93,11 @@ export async function toggleDisable(req, res, next) {
     const id = String(req.params.id);
     const { is_disabled } = req.body;
     if (typeof is_disabled !== 'boolean') return res.status(400).json({ error: 'is_disabled debe ser boolean' });
-    const user = await prisma.users.update({ where: { id }, data: { is_disabled, updated_at: new Date() } });
+    const user = await prisma.users.update({
+      where: { id },
+      data: { is_disabled, updated_at: new Date() },
+      select: { id: true, name: true, role: true, email: true, phone: true, is_disabled: true, created_at: true }
+    });
     res.json(user);
   } catch (err) {
     if (err?.code === 'P2025') return res.status(404).json({ error: 'Usuario no encontrado' });

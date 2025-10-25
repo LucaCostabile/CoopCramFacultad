@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { prisma } from '../config/prisma.js';
 import { normalizeId } from '../utils/userId.js';
 import { signToken } from '../utils/jwt.js';
+import { sendMail } from '../utils/mailer.js';
 
 function isEmail(v){ return /@/.test(v); }
 function isPhone(v){ return /^[0-9+\-\s]+$/.test(v) && !/@/.test(v); }
@@ -81,4 +83,69 @@ export async function me(req, res, next) {
   } catch (err) {
     next(err);
   }
+}
+
+// =========== Recuperación de contraseña ===========
+export async function forgotPassword(req, res, next) {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'Email requerido' });
+
+    const user = await prisma.users.findUnique({ where: { email } }).catch(() => null);
+    // Siempre respondemos 200 para evitar enumeración de usuarios
+    if (!user) return res.json({ ok: true });
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const now = new Date();
+    await prisma.password_reset_tokens.upsert({
+      where: { email },
+      update: { token, created_at: now },
+      create: { email, token, created_at: now }
+    });
+
+    const base = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const link = `${base}/restablecer-contrasena?token=${encodeURIComponent(token)}`;
+
+    await sendMail({
+      to: email,
+      subject: 'Recuperación de contraseña - Cooperativa CRAM',
+      html: `
+        <p>Hola ${user.name || ''},</p>
+        <p>Recibimos una solicitud para restablecer tu contraseña. Hacé clic en el siguiente enlace para continuar:</p>
+        <p><a href="${link}" target="_blank">Restablecer contraseña</a></p>
+        <p>Este enlace expira en 6 horas.</p>
+        <p>Si vos no solicitaste este cambio, podés ignorar este correo.</p>
+      `
+    }).catch(() => {});
+
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+}
+
+export async function resetPassword(req, res, next) {
+  try {
+    const { token, password, password_confirmation } = req.body || {};
+    if (!token) return res.status(400).json({ error: 'Token requerido' });
+    if (!password || password.length < 6) return res.status(400).json({ error: 'Contraseña mínima 6 caracteres' });
+    if (password_confirmation && password !== password_confirmation) return res.status(400).json({ error: 'Las contraseñas no coinciden' });
+
+    const row = await prisma.password_reset_tokens.findFirst({ where: { token } });
+    if (!row) return res.status(400).json({ error: 'Token inválido o expirado' });
+    const created = row.created_at ? new Date(row.created_at) : null;
+    const sixHoursMs = 6 * 60 * 60 * 1000;
+    if (!created || (Date.now() - created.getTime()) > sixHoursMs) {
+      // Expirado: borrar token
+      await prisma.password_reset_tokens.delete({ where: { email: row.email } }).catch(() => {});
+      return res.status(400).json({ error: 'Token inválido o expirado' });
+    }
+
+    const user = await prisma.users.findUnique({ where: { email: row.email } });
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    const hash = await bcrypt.hash(password, 10);
+    await prisma.users.update({ where: { id: user.id }, data: { password: hash, updated_at: new Date() } });
+    await prisma.password_reset_tokens.delete({ where: { email: row.email } }).catch(() => {});
+
+    res.json({ ok: true });
+  } catch (err) { next(err); }
 }

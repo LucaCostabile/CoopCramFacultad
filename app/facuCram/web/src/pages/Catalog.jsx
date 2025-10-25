@@ -2,6 +2,11 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "../services/api";
 
 export default function Catalog() {
+  // Marcar body para estilos específicos del catálogo
+  useEffect(()=>{
+    document.body.classList.add('page-catalogo');
+    return ()=> document.body.classList.remove('page-catalogo');
+  },[]);
   // Filtros básicos
   const [filters, setFilters] = useState({ motors: [], rubros: [] });
   const [q, setQ] = useState("");
@@ -267,7 +272,7 @@ export default function Catalog() {
   const rubrosAMostrar = rubrosLista.filter((r) => rubrosVisibles.has(r));
 
   return (
-    <div className="container">
+    <div className="main-catalogo">
       <h1 className="text-2xl font-bold texto">Catálogo de Repuestos - CRAM</h1>
 
       {/* Búsqueda y Filtros */}

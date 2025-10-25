@@ -25,10 +25,10 @@ export default function Admin() {
           <div className="card admin-tile">
             <div className="card-body">
               <h4>Pedidos/Ventas</h4>
-              <p>Reporte de ventas y pedidos entregados (pendiente).</p>
-              <button className="btn btn-outline" disabled>
+              <p>Reporte de ventas y pedidos entregados.</p>
+              <Link className="btn btn-primary" to="/admin/sales">
                 Ver ventas
-              </button>
+              </Link>
             </div>
           </div>
         )}
