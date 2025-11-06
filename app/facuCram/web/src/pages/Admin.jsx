@@ -16,7 +16,7 @@ export default function Admin() {
           <div className="card-body">
             <h4>Usuarios</h4>
             <p>Gestionar usuarios: crear, editar, inhabilitar.</p>
-            <Link className="btn btn-primary" to="/admin/usuarios">
+            <Link className="btn btn-success" to="/admin/usuarios">
               Gestionar
             </Link>
           </div>
@@ -26,7 +26,7 @@ export default function Admin() {
             <div className="card-body">
               <h4>Pedidos/Ventas</h4>
               <p>Reporte de ventas y pedidos entregados.</p>
-              <Link className="btn btn-primary" to="/admin/sales">
+              <Link className="btn btn-success" to="/admin/sales">
                 Ver ventas
               </Link>
             </div>
@@ -40,7 +40,7 @@ export default function Admin() {
                 Cola de pedidos para preparar, despachar y marcar entregados
                 (pendiente).
               </p>
-              <Link className="btn btn-primary" to="/admin/orders">
+              <Link className="btn btn-success" to="/admin/orders">
                 Ver pedidos
               </Link>
             </div>

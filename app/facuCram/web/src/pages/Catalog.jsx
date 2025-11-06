@@ -3,10 +3,11 @@ import { api } from "../services/api";
 
 export default function Catalog() {
   // Marcar body para estilos específicos del catálogo
-  useEffect(()=>{
-    document.body.classList.add('page-catalogo');
-    return ()=> document.body.classList.remove('page-catalogo');
-  },[]);
+  useEffect(() => {
+    document.body.classList.add("page-catalogo");
+    return () => document.body.classList.remove("page-catalogo");
+  }, []);
+
   // Filtros básicos
   const [filters, setFilters] = useState({ motors: [], rubros: [] });
   const [q, setQ] = useState("");
@@ -48,12 +49,15 @@ export default function Catalog() {
 
   // Actualizar visibilidad de rubros según filtros
   const actualizarRubrosVisibles = useCallback(
-    async (trigger = "other") => {
+    async (trigger = "other", rubroOverride = null) => {
       try {
+        // Usar rubroOverride si se proporciona, sino usar el estado actual
+        const rubroActual = rubroOverride !== null ? rubroOverride : rubro;
+
         const params = { only_stock: onlyStock ? 1 : 0 };
         if (motor) params.motor = motor;
         if (q.trim()) params.q = q.trim();
-        if (rubro) params.rubro = rubro;
+        if (rubroActual) params.rubro = rubroActual;
 
         const res = await api.get("/catalogo/rubro-counts", { params });
         const rows = res.data;
@@ -62,12 +66,12 @@ export default function Catalog() {
         );
 
         const qEmpty = q.trim() === "";
-        const explicitRubroSelected = Boolean(rubro);
+        const explicitRubroSelected = Boolean(rubroActual);
 
         // Actualizar rubros visibles
         if (explicitRubroSelected) {
           // Solo mostrar el rubro seleccionado
-          setRubrosVisibles(new Set([rubro]));
+          setRubrosVisibles(new Set([rubroActual]));
         } else if (qEmpty && !motor) {
           // Sin filtros: mostrar todos
           setRubrosVisibles(new Set(rubrosLista));
@@ -103,8 +107,8 @@ export default function Catalog() {
           });
         } else if (trigger === "rubro") {
           // Abrir solo el rubro seleccionado
-          if (rubro && rubrosConResultados.has(rubro)) {
-            newOpenRubros.add(rubro);
+          if (rubroActual && rubrosConResultados.has(rubroActual)) {
+            newOpenRubros.add(rubroActual);
           }
         } else if (trigger === "motor") {
           // Cerrar todos al cambiar motor
@@ -138,17 +142,26 @@ export default function Catalog() {
     return () => clearTimeout(timer);
   }, [q]);
 
-  // Efecto para cambios de motor y stock
+  // Efecto para cambios de motor
   useEffect(() => {
     actualizarRubrosVisibles("motor");
-    // Al cambiar marca, cerramos todos los acordeones
     setOpenRubros(new Set());
   }, [motor]);
 
-  // Manejo especial para cambio de rubro
+  // Efecto para cambios de rubro
+  useEffect(() => {
+    if (rubro !== "") {
+      actualizarRubrosVisibles("rubro", rubro);
+    } else {
+      // Si se limpió el filtro de rubro, actualizar normalmente
+      actualizarRubrosVisibles("other");
+    }
+  }, [rubro]);
+
+  //  Handler de cambio de rubro (solo cambia el estado)
   const handleRubroChange = (newRubro) => {
     setRubro(newRubro);
-    setTimeout(() => actualizarRubrosVisibles("rubro"), 0);
+    // El useEffect de arriba se encargará de actualizar los rubros visibles
   };
 
   // Toggle acordeón
