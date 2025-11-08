@@ -32,12 +32,11 @@ function convertBigInt(value) {
 }
 
 /**
- * Obtener todos los pedidos con sus items
- * (Volvemos a la versión original N+1 para evitar el error 500)
+ * Obtener todos los pedidos con información del cliente
  */
 export async function getOrders(req, res, next) {
   try {
-    console.log("📦 Obteniendo pedidos (versión N+1 temporal)...");
+    console.log("📦 Obteniendo pedidos...");
 
     const orders = await prisma.orders.findMany({
       orderBy: {
@@ -47,29 +46,45 @@ export async function getOrders(req, res, next) {
 
     console.log(`✅ ${orders.length} pedidos encontrados en DB`);
 
-    // Obtener items para cada pedido (esto es lento pero funciona)
-    const ordersWithItems = await Promise.all(
+    // Obtener items y datos del usuario para cada pedido
+    const ordersWithDetails = await Promise.all(
       orders.map(async (order) => {
-        // Tu código original para crear pedidos usa 'order_items', así que esto debería funcionar.
         const items = await prisma.order_items.findMany({
           where: {
             order_id: order.id,
           },
         });
 
+        // Obtener información del cliente si existe user_id
+        let client_name = "Sin cliente";
+
+        if (order.user_id) {
+          try {
+            const user = await prisma.users.findUnique({
+              where: { id: order.user_id },
+              select: { name: true },
+            });
+            client_name = user?.name || `Usuario ${order.user_id}`;
+          } catch (err) {
+            console.error(`Error obteniendo usuario ${order.user_id}:`, err);
+            client_name = `Usuario ${order.user_id}`;
+          }
+        }
+
         return {
           ...order,
-          items, // El frontend 'Orders.jsx' espera un array 'items'
+          client_name,
+          items,
         };
       })
     );
 
-    const response = convertBigInt(ordersWithItems);
+    const response = convertBigInt(ordersWithDetails);
     console.log("📤 Enviando respuesta con", response.length, "pedidos");
 
     res.json(response);
   } catch (err) {
-    console.error("❌ Error en getOrders (N+1):", err);
+    console.error("❌ Error en getOrders:", err);
     res
       .status(500)
       .json({ error: "Error al obtener pedidos", details: err.message });
@@ -78,7 +93,6 @@ export async function getOrders(req, res, next) {
 
 /**
  * Obtener un pedido específico por ID
- * (Volvemos a la versión original N+1)
  */
 export async function getOrderById(req, res, next) {
   try {
@@ -102,8 +116,25 @@ export async function getOrderById(req, res, next) {
       },
     });
 
+    // Obtener nombre del cliente
+    let client_name = "Sin cliente";
+
+    if (order.user_id) {
+      try {
+        const user = await prisma.users.findUnique({
+          where: { id: order.user_id },
+          select: { name: true },
+        });
+        client_name = user?.name || `Usuario ${order.user_id}`;
+      } catch (err) {
+        console.error(`Error obteniendo usuario ${order.user_id}:`, err);
+        client_name = `Usuario ${order.user_id}`;
+      }
+    }
+
     const response = convertBigInt({
       ...order,
+      client_name,
       items,
     });
 
@@ -117,12 +148,14 @@ export async function getOrderById(req, res, next) {
 }
 
 /**
- * Crear nuevo pedido
- * (Tu función original, solo se quitó la '}' extra al final)
+ * Crear nuevo pedido - VERSIÓN CON AUTENTICACIÓN REAL
  */
 export async function createOrder(req, res, next) {
   try {
-    console.log("📝 Creando nuevo pedido...");
+    console.log("🆕 Creando nuevo pedido...");
+    console.log("📝 Body recibido:", JSON.stringify(req.body, null, 2));
+    console.log("👤 Usuario autenticado (req.user):", req.user);
+
     const { items, comment } = req.body || {};
 
     // Validar que items existe y es un array con al menos 1 elemento
@@ -178,12 +211,27 @@ export async function createOrder(req, res, next) {
       });
     }
 
-    // Crear orden y sus items en una transacción
+    // Crear pedido y sus items en una transacción
     const created = await prisma.$transaction(async (tx) => {
-      // Obtener userId si existe autenticación, sino null
-      const userId = req.user?.sub || req.user?.id || null;
+      // Obtener userId del token JWT (viene en req.user gracias a requireAuth)
+      let userId = null;
 
-      // Crear la orden
+      if (req.user) {
+        // El payload del JWT puede tener diferentes estructuras
+        userId = req.user.sub || req.user.id || req.user.userId || null;
+        console.log("✅ Usuario extraído del token:", userId);
+      } else {
+        console.log(
+          "⚠️ No hay req.user - el middleware requireAuth no se ejecutó"
+        );
+      }
+
+      console.log("📝 Creando pedido con:", {
+        user_id: userId,
+        total,
+        items: orderItemsData.length,
+      });
+
       const order = await tx.orders.create({
         data: {
           user_id: userId,
@@ -208,12 +256,12 @@ export async function createOrder(req, res, next) {
 
     console.log("✅ Pedido creado:", created.id);
 
-    // Convertir BigInt a Number antes de enviar la respuesta
     const response = convertBigInt({
       ok: true,
       order_id: created.id,
       total: created.total,
       status: created.status,
+      user_id: created.user_id,
     });
 
     res.json(response);
@@ -224,7 +272,11 @@ export async function createOrder(req, res, next) {
       .json({ error: "Error al crear pedido", details: err.message });
   }
 }
-  export const actualizarEstadoPedido = async (req, res) => {
+
+/**
+ * Actualizar el estado de un pedido
+ */
+export const actualizarEstadoPedido = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -241,7 +293,7 @@ export async function createOrder(req, res, next) {
 
     const response = convertBigInt({
       ok: true,
-      pedido
+      pedido,
     });
 
     return res.json(response);
@@ -250,22 +302,23 @@ export async function createOrder(req, res, next) {
     return res.status(500).json({ ok: false, message: "Error interno" });
   }
 };
+
+/**
+ * Eliminar un pedido
+ */
 export const eliminarPedido = async (req, res) => {
   const { id } = req.params;
 
   try {
     console.log(`🗑️ Eliminando pedido ${id}...`);
 
-    // Eliminar en una transacción para asegurar consistencia
     await prisma.$transaction(async (tx) => {
-      // Primero eliminar los items del pedido
       await tx.order_items.deleteMany({
-        where: { order_id: BigInt(id) }
+        where: { order_id: BigInt(id) },
       });
 
-      // Luego eliminar el pedido
       await tx.orders.delete({
-        where: { id: BigInt(id) }
+        where: { id: BigInt(id) },
       });
     });
 
@@ -273,9 +326,15 @@ export const eliminarPedido = async (req, res) => {
     return res.json({ ok: true, message: "Pedido eliminado" });
   } catch (error) {
     console.error("❌ Error al eliminar pedido:", error);
-    return res.status(500).json({ ok: false, message: "Error al eliminar pedido" });
+    return res
+      .status(500)
+      .json({ ok: false, message: "Error al eliminar pedido" });
   }
 };
+
+/**
+ * Obtener pedido con detalles completos de productos
+ */
 export async function getOrderByIdWithDetails(req, res, next) {
   try {
     const { id } = req.params;
@@ -315,8 +374,25 @@ export async function getOrderByIdWithDetails(req, res, next) {
       })
     );
 
+    // Obtener nombre del cliente
+    let client_name = "Sin cliente";
+
+    if (order.user_id) {
+      try {
+        const user = await prisma.users.findUnique({
+          where: { id: order.user_id },
+          select: { name: true },
+        });
+        client_name = user?.name || `Usuario ${order.user_id}`;
+      } catch (err) {
+        console.error(`Error obteniendo usuario ${order.user_id}:`, err);
+        client_name = `Usuario ${order.user_id}`;
+      }
+    }
+
     const response = convertBigInt({
       ...order,
+      client_name,
       items: itemsWithProductInfo,
     });
 
@@ -338,9 +414,9 @@ export const actualizarCantidadItem = async (req, res) => {
   const { quantity } = req.body;
 
   if (!Number.isInteger(quantity) || quantity < 1) {
-    return res.status(400).json({ 
-      ok: false, 
-      message: "La cantidad debe ser un número mayor a 0" 
+    return res.status(400).json({
+      ok: false,
+      message: "La cantidad debe ser un número mayor a 0",
     });
   }
 
@@ -356,44 +432,44 @@ export const actualizarCantidadItem = async (req, res) => {
     });
 
     if (!item) {
-      return res.status(404).json({ 
-        ok: false, 
-        message: "Item no encontrado" 
+      return res.status(404).json({
+        ok: false,
+        message: "Item no encontrado",
       });
     }
 
-    // ✅ VALIDAR STOCK DEL PRODUCTO
+    // Validar stock del producto
     const product = await prisma.products.findUnique({
       where: { id: item.product_id },
     });
 
     if (!product) {
-      return res.status(404).json({ 
-        ok: false, 
-        message: "Producto no encontrado" 
+      return res.status(404).json({
+        ok: false,
+        message: "Producto no encontrado",
       });
     }
 
     // Verificar si hay stock suficiente
     if (product.stock && Number(product.stock) < quantity) {
-      return res.status(400).json({ 
-        ok: false, 
-        message: `Stock insuficiente. Stock disponible: ${product.stock}` 
+      return res.status(400).json({
+        ok: false,
+        message: `Stock insuficiente. Stock disponible: ${product.stock}`,
       });
     }
 
     // Verificar si el producto está activo y en stock
     if (!product.is_active) {
-      return res.status(400).json({ 
-        ok: false, 
-        message: "El producto está inactivo" 
+      return res.status(400).json({
+        ok: false,
+        message: "El producto está inactivo",
       });
     }
 
     if (!product.in_stock) {
-      return res.status(400).json({ 
-        ok: false, 
-        message: "El producto no tiene stock disponible" 
+      return res.status(400).json({
+        ok: false,
+        message: "El producto no tiene stock disponible",
       });
     }
 
@@ -416,9 +492,8 @@ export const actualizarCantidadItem = async (req, res) => {
     });
 
     const newTotal = allItems.reduce((sum, it) => {
-      const itemSubtotal = it.id === BigInt(itemId) 
-        ? subtotal 
-        : Number(it.subtotal);
+      const itemSubtotal =
+        it.id === BigInt(itemId) ? subtotal : Number(it.subtotal);
       return sum + itemSubtotal;
     }, 0);
 
@@ -443,9 +518,9 @@ export const actualizarCantidadItem = async (req, res) => {
     return res.json(response);
   } catch (error) {
     console.error("❌ Error al actualizar cantidad:", error);
-    return res.status(500).json({ 
-      ok: false, 
-      message: "Error al actualizar cantidad" 
+    return res.status(500).json({
+      ok: false,
+      message: "Error al actualizar cantidad",
     });
   }
 };

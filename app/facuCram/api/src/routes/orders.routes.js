@@ -5,19 +5,25 @@ import {
   getOrderById,
   actualizarEstadoPedido,
   eliminarPedido,
-  getOrderByIdWithDetails,   
-  actualizarCantidadItem,  
-
+  getOrderByIdWithDetails,
+  actualizarCantidadItem,
 } from "../controllers/orders.controller.js";
+import { requireAuth } from "../middlewares/auth.js";
 
 const router = Router();
 
-router.get("/", getOrders); // GET /api/pedidos - Listar todos
-router.get("/:id", getOrderById); // GET /api/pedidos/:id - Ver uno
-router.get("/:id/details", getOrderByIdWithDetails); // GET /api/pedidos/:id/details - Ver uno con detalles
-router.post("/", createOrder); // POST /api/pedidos - Crear
-router.patch("/:id/items/:itemId", actualizarCantidadItem); // PATCH /api/pedidos/:id/items/:itemId - Actualizar cantidad de un ítem
-router.patch("/:id/status", actualizarEstadoPedido); // PATCH /api/pedidos/:id/status - Actualizar estado
-router.delete("/:id", eliminarPedido);; // DELETE /api/pedidos/:id - Eliminar pedido
+router.get("/", getOrders);
+router.get("/:id", getOrderById);
+router.get("/:id/details", getOrderByIdWithDetails);
+
+// Con autenticación real (obtiene usuario del token JWT)
+router.post("/", requireAuth, createOrder); // 👈 USAR requireAuth
+
+// OPCIÓN 2: Sin autenticación (el nombre viene en el body)
+// router.post("/", createOrder);
+
+router.patch("/:id/items/:itemId", actualizarCantidadItem);
+router.patch("/:id/status", actualizarEstadoPedido);
+router.delete("/:id", eliminarPedido);
 
 export default router;

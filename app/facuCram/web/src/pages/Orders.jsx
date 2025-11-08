@@ -17,6 +17,8 @@ export default function OrdersDebug() {
     try {
       setLoading(true);
       const response = await api.get("/pedidos");
+      console.log("📦 Pedidos recibidos:", response.data); // 👈 AGREGAR
+      console.log("📅 Primera fecha:", response.data[0]?.created_at); // 👈 AGREGAR
       setPedidos(response.data);
       setError(null);
     } catch (err) {
@@ -29,14 +31,16 @@ export default function OrdersDebug() {
 
   const cambiarEstado = async (pedidoId, nuevoEstado) => {
     try {
-      const response = await api.patch(`/pedidos/${pedidoId}/status`, { 
-        status: nuevoEstado 
+      const response = await api.patch(`/pedidos/${pedidoId}/status`, {
+        status: nuevoEstado,
       });
 
       if (response.data.ok) {
-        setPedidos(pedidos.map(p => 
-          p.id === pedidoId ? { ...p, status: nuevoEstado } : p
-        ));
+        setPedidos(
+          pedidos.map((p) =>
+            p.id === pedidoId ? { ...p, status: nuevoEstado } : p
+          )
+        );
       }
     } catch (err) {
       console.error("❌ Error al actualizar estado:", err);
@@ -51,9 +55,9 @@ export default function OrdersDebug() {
 
     try {
       const response = await api.delete(`/pedidos/${pedidoId}`);
-      
+
       if (response.data.ok) {
-        setPedidos(pedidos.filter(p => p.id !== pedidoId));
+        setPedidos(pedidos.filter((p) => p.id !== pedidoId));
         alert("Pedido eliminado correctamente");
       }
     } catch (err) {
@@ -70,23 +74,28 @@ export default function OrdersDebug() {
   const formatearFecha = (fecha) => {
     if (!fecha) return "";
     const date = new Date(fecha);
-    return date.toLocaleString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleString("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const pedidosFiltrados = mostrarEntregados
-    ? pedidos.filter(p => p.status === "delivered")
-    : pedidos.filter(p => p.status !== "delivered");
+    ? pedidos.filter((p) => p.status === "delivered")
+    : pedidos.filter((p) => p.status !== "delivered");
 
   if (loading) {
-    return <div className="container" style={{ padding: "40px", textAlign: "center" }}>
-      ⏳ Cargando pedidos...
-    </div>;
+    return (
+      <div
+        className="container"
+        style={{ padding: "40px", textAlign: "center" }}
+      >
+        ⏳ Cargando pedidos...
+      </div>
+    );
   }
 
   if (error) {
@@ -105,16 +114,18 @@ export default function OrdersDebug() {
 
   return (
     <div className="container">
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center",
-        marginBottom: "20px" 
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
         <h1 style={{ margin: 0 }}>
           {mostrarEntregados ? "Pedidos entregados" : "Pedidos en curso"}
         </h1>
-        <button 
+        <button
           className="btn btn-outline"
           onClick={() => setMostrarEntregados(!mostrarEntregados)}
         >
@@ -124,8 +135,13 @@ export default function OrdersDebug() {
 
       {pedidosFiltrados.length === 0 ? (
         <div className="card">
-          <div className="card-body" style={{ textAlign: "center", padding: "40px" }}>
-            <p>No hay pedidos {mostrarEntregados ? "entregados" : "en curso"}</p>
+          <div
+            className="card-body"
+            style={{ textAlign: "center", padding: "40px" }}
+          >
+            <p>
+              No hay pedidos {mostrarEntregados ? "entregados" : "en curso"}
+            </p>
           </div>
         </div>
       ) : (
@@ -145,17 +161,24 @@ export default function OrdersDebug() {
               {pedidosFiltrados.map((pedido) => (
                 <tr key={pedido.id}>
                   <td>{pedido.id}</td>
-                  <td>{pedido.client_name || pedido.user_id || "Sin cliente"}</td>
+                  <td>
+                    {pedido.client_name || pedido.user_id || "Sin cliente"}
+                  </td>
                   <td>{formatearFecha(pedido.created_at)}</td>
-                  <td>${Number(pedido.total).toLocaleString('es-AR', { 
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2 
-                  })}</td>
+                  <td>
+                    $
+                    {Number(pedido.total).toLocaleString("es-AR", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </td>
                   {!mostrarEntregados && (
                     <td>
-                      <select 
+                      <select
                         value={pedido.status}
-                        onChange={(e) => cambiarEstado(pedido.id, e.target.value)}
+                        onChange={(e) =>
+                          cambiarEstado(pedido.id, e.target.value)
+                        }
                         className="estado-select"
                       >
                         <option value="pending">Recibido</option>
@@ -166,7 +189,7 @@ export default function OrdersDebug() {
                   )}
                   <td>
                     <div className="acciones-grupo">
-                      <button 
+                      <button
                         className="btn-accion btn-ver"
                         onClick={() => verProductos(pedido.id)} // ✅ Cambiar a navigate
                       >
@@ -174,13 +197,15 @@ export default function OrdersDebug() {
                       </button>
                       {mostrarEntregados && (
                         <>
-                          <button 
+                          <button
                             className="btn-accion btn-preparado"
-                            onClick={() => cambiarEstado(pedido.id, "preparing")}
+                            onClick={() =>
+                              cambiarEstado(pedido.id, "preparing")
+                            }
                           >
                             Volver a preparado
                           </button>
-                          <button 
+                          <button
                             className="btn-accion btn-recibido"
                             onClick={() => cambiarEstado(pedido.id, "pending")}
                           >
@@ -188,7 +213,7 @@ export default function OrdersDebug() {
                           </button>
                         </>
                       )}
-                      <button 
+                      <button
                         className="btn-accion btn-borrar"
                         onClick={() => borrarPedido(pedido.id)}
                       >

@@ -60,3 +60,5 @@ yarn.lock
 # Archivos de base de datos local (si los tienes)
 *.db
 *.sqlite
+
+app/facuCram/api/prisma/migrations/
