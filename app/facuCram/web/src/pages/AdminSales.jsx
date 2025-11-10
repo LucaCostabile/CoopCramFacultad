@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../services/api";
 
 function fmtMoney(n) {
@@ -170,9 +171,9 @@ export default function AdminSales() {
                 <td>{fmtDate(o.created_at)}</td>
                 <td className="align-middle">{fmtMoney(o.total)}</td>
                 <td className="align-middle">
-                  <a className="btn btn-sm btn-outline-primary" href="/admin/orders" onClick={(e) => { /* se podría navegar con router */ }}>
+                  <Link className="btn btn-sm btn-outline-primary" to={`/admin/orders/${o.id}`}>
                     Ver productos
-                  </a>
+                  </Link>
                 </td>
               </tr>
             ))}
