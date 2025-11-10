@@ -25,8 +25,11 @@ async function findUserByLogin(login){
 export async function login(req, res, next) {
   try {
     const { id: loginField, password } = req.body;
+    // Registrar intentos de login (no registrar contraseñas)
+    try { console.log(`[auth.login] intento de login para id=${String(loginField).slice(0,50)}`); } catch(e){}
     if (!loginField || !password) return res.status(400).json({ error: 'login y password requeridos' });
     const user = await findUserByLogin(loginField);
+    try { console.log(`[auth.login] usuario encontrado=${!!user} id=${user?.id || 'n/a'} passwordExists=${!!user?.password}`); } catch(e){}
     if (!user) return res.status(401).json({ error: 'Credenciales inválidas' });
     if (user.is_disabled) return res.status(403).json({ error: 'Usuario inhabilitado' });
 
@@ -106,17 +109,23 @@ export async function forgotPassword(req, res, next) {
     const base = process.env.FRONTEND_URL || 'http://localhost:5173';
     const link = `${base}/restablecer-contrasena?token=${encodeURIComponent(token)}`;
 
-    await sendMail({
-      to: email,
-      subject: 'Recuperación de contraseña - Cooperativa CRAM',
-      html: `
-        <p>Hola ${user.name || ''},</p>
-        <p>Recibimos una solicitud para restablecer tu contraseña. Hacé clic en el siguiente enlace para continuar:</p>
-        <p><a href="${link}" target="_blank">Restablecer contraseña</a></p>
-        <p>Este enlace expira en 6 horas.</p>
-        <p>Si vos no solicitaste este cambio, podés ignorar este correo.</p>
-      `
-    }).catch(() => {});
+    try {
+      const result = await sendMail({
+        to: email,
+        subject: 'Recuperación de contraseña - Cooperativa CRAM',
+        html: `
+          <p>Hola ${user.name || ''},</p>
+          <p>Recibimos una solicitud para restablecer tu contraseña. Hacé clic en el siguiente enlace para continuar:</p>
+          <p><a href="${link}" target="_blank">Restablecer contraseña</a></p>
+          <p>Este enlace expira en 6 horas.</p>
+          <p>Si vos no solicitaste este cambio, podés ignorar este correo.</p>
+        `
+      });
+      console.log('[mail.forgotPassword] enviado', { accepted: result.accepted, rejected: result.rejected, response: result.response });
+    } catch (mailErr) {
+      console.error('[mail.forgotPassword] error enviando correo:', mailErr?.message || mailErr);
+      // No revelamos fallo al cliente para evitar enumeración, pero lo dejamos logeado.
+    }
 
     res.json({ ok: true });
   } catch (err) { next(err); }

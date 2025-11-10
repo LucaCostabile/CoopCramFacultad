@@ -6,13 +6,14 @@ import { loadEnv } from '../config/env.js';
 loadEnv();
 
 function parseArgs(argv){
-  const args = { file: null, minRows: 100, limit: null, dry: false };
+  const args = { file: null, minRows: 100, limit: null, dry: false, concurrency: null };
   for (let i=2;i<argv.length;i++){
     const a = argv[i];
     if (!a) continue;
     if (a === '--dry') { args.dry = true; continue; }
     if (a.startsWith('--minRows=')) { args.minRows = parseInt(a.split('=')[1]||'100',10)||100; continue; }
     if (a.startsWith('--limit=')) { args.limit = parseInt(a.split('=')[1]||'',10)||null; continue; }
+    if (a.startsWith('--concurrency=')) { args.concurrency = parseInt(a.split('=')[1]||'',10)||null; continue; }
     if (!args.file) { args.file = a; continue; }
   }
   if (!args.file) {
@@ -38,7 +39,7 @@ function toBoolInStock(stockStr){
   return String(stockStr||'').toUpperCase().includes('SI');
 }
 
-async function importProducts(filePath, { minRows=100, limit=null, dry=false } = {}){
+async function importProducts(filePath, { minRows=100, limit=null, dry=false, concurrency=null } = {}){
   if (!fs.existsSync(filePath)) {
     console.error('No existe el archivo:', filePath);
     process.exit(2);
@@ -105,9 +106,13 @@ async function importProducts(filePath, { minRows=100, limit=null, dry=false } =
   await prisma.products.updateMany({ data: { is_active: false } });
 
   console.log('Upserting por code...');
-  // Limitar concurrencia para no saturar conexiones
-  const concurrency = 50;
-  let i = 0; let imported = 0;
+  // Concurrency puede venir por argumento o variable de entorno; bajar por defecto para DB remotas
+  const envConcurrency = parseInt(process.env.PRISMA_IMPORT_CONCURRENCY||'0',10) || null;
+  const defaultConcurrency = 5; // valor seguro para conexiones remotas como Railway
+  const usedConcurrency = concurrency || envConcurrency || defaultConcurrency;
+  console.log(`Usando concurrencia=${usedConcurrency}`);
+
+  let imported = 0;
   async function worker(chunk){
     for (const p of chunk){
       await prisma.products.upsert({
@@ -148,9 +153,9 @@ async function importProducts(filePath, { minRows=100, limit=null, dry=false } =
     }
   }
 
-  // Distribuir items en 'concurrency' lotes balanceados
-  const batches = Array.from({length: concurrency}, ()=>[]);
-  items.forEach((p, idx)=>{ batches[idx % concurrency].push(p); });
+  // Distribuir items en 'usedConcurrency' lotes balanceados
+  const batches = Array.from({length: usedConcurrency}, ()=>[]);
+  items.forEach((p, idx)=>{ batches[idx % usedConcurrency].push(p); });
   await Promise.all(batches.map(b=>worker(b)));
 
   console.log('Eliminando obsoletos...');
